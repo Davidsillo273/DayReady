@@ -6,6 +6,11 @@ import productsRoutes from "../productsRoutes.js";
 import registerAdminRoutes from "../auth/admins/registerAdminRoutes.js";
 import registerCustomerRoutes from "../auth/customers/registerCustomerRoutes.js";
 import registerEmployeeRoutes from "../auth/employees/registerEmployeeRoutes.js";
+import loginAdminRoutes from "../auth/admins/loginAdminRoutes.js";
+import loginCustomerRoutes from "../auth/customers/loginCustomerRoutes.js";
+import loginEmployeeRoutes from "../auth/employees/loginEmployeeRoutes.js";
+import recoveryPasswordRoutes from "../auth/recoveryPasswordRoutes.js";
+import logoutRoutes from "../auth/logoutRoutes.js";
 // Aquí importamos todas las rutas de cada módulo
 const router = Router();
 
@@ -15,5 +20,10 @@ router.use("/products", productsRoutes);
 router.use("/auth/admins/register", registerAdminRoutes);
 router.use("/auth/customers/register", registerCustomerRoutes);
 router.use("/auth/employees/register", registerEmployeeRoutes);
+router.use("/auth/admins/login", loginAdminRoutes);
+router.use("/auth/customers/login", loginCustomerRoutes);
+router.use("/auth/employees/login", loginEmployeeRoutes);
+router.use("/auth/recovery", recoveryPasswordRoutes);
+router.use("/auth/logout", logoutRoutes);
 export default router;
 
