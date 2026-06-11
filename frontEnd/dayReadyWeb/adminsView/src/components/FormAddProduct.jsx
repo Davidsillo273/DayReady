@@ -111,7 +111,7 @@ export default function FormAddProduct({ onSubmit, onCancel, initialProduct = nu
                     {errors.description && <p className="text-red-500 text-xs mt-1">{errors.description.message}</p>}
                 </div>
 
-                {/* Categoría + Tipo */}
+                {/* Categoría y Tipo */}
                 <div className="grid grid-cols-2 gap-4">
                     <div>
                         <label className="block text-gray-700 text-xs font-semibold mb-1">Categoría</label>
@@ -129,7 +129,7 @@ export default function FormAddProduct({ onSubmit, onCancel, initialProduct = nu
                     </div>
                 </div>
 
-                {/* Precio + Stock */}
+                {/* Precio y Stock */}
                 <div className="grid grid-cols-2 gap-4">
                     <div>
                         <label className="block text-gray-700 text-xs font-semibold mb-1">Precio</label>
