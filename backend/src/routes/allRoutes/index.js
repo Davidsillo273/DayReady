@@ -4,6 +4,8 @@ import productsRoutes from "../productsRoutes.js";
 import adminRoutes from "../adminRoutes.js";
 import employeeRoutes from "../employeeRoutes.js";
 import customerRoutes from "../customerRoutes.js";
+import cartRoutes from "../cartRoutes.js";
+import ordersRoutes from "../orderRoutes.js";
 
 //auths
 import registerAdminRoutes from "../auth/admins/registerAdminRoutes.js";
@@ -31,4 +33,6 @@ router.use("/auth/customers/login", loginCustomerRoutes);
 router.use("/auth/employees/login", loginEmployeeRoutes);
 router.use("/auth/recovery", recoveryPasswordRoutes);
 router.use("/auth/logout", logoutRoutes);
+router.use("/cart", cartRoutes);
+router.use("/orders", ordersRoutes);
 export default router;
