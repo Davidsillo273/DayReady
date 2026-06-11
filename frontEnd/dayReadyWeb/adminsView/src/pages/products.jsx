@@ -8,7 +8,6 @@ import FormAddProduct from '../Components/FormAddProduct';
 
 const BASE_URL = 'http://localhost:4000/api';
 
-// Categorías — deben coincidir con los values del FormAddProduct
 const CATEGORIES = [
   { id: 'todos',         label: 'Todos los productos' },
   { id: 'combos',        label: 'Combos'        },
@@ -170,7 +169,6 @@ export default function Products() {
     }
   };
 
-  // Contar filtros extra activos para mostrar badge
   const activeExtraFilters = [selectedServiceType, selectedStock].filter((f) => f !== 'todos').length;
 
   const resetExtraFilters = () => {
@@ -273,7 +271,6 @@ export default function Products() {
               ))}
             </div>
 
-            {/* Panel de filtros extra */}
             {showExtraFilters && (
               <div className="border-t border-gray-200 pt-4 mt-2">
                 <div className="flex items-center justify-between mb-3">
@@ -300,7 +297,6 @@ export default function Products() {
                       ))}
                     </div>
                   </div>
-                  {/* Estado / Stock */}
                   <div>
                     <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Estado</p>
                     <div className="flex flex-wrap gap-2">
@@ -319,7 +315,6 @@ export default function Products() {
             )}
           </div>
 
-          {/* Tabla */}
           <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
             {loading ? (
               <div className="flex items-center justify-center py-16 text-gray-500">Cargando productos...</div>
