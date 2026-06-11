@@ -1,6 +1,6 @@
 import mongoose, { Schema, model } from "mongoose";
 
-const employeeSchema = new Schema(
+const customerSchema = new Schema(
   {
     name: {
       type: String,
@@ -19,6 +19,12 @@ const employeeSchema = new Schema(
       lowercase: true,
       trim: true,
     },
+    carnet: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+    },
     phone: {
       type: String,
       required: true,
@@ -28,14 +34,23 @@ const employeeSchema = new Schema(
       type: String,
       required: true,
     },
-    local: {
-      type: String,
-      required: true,
-      trim: true,
-    },
+    addresses: [
+      {
+        label: { type: String, trim: true },
+        street: { type: String, trim: true },
+        city: { type: String, trim: true },
+        isDefault: { type: Boolean, default: false },
+      },
+    ],
+    favorites: [
+      {
+        type: mongoose.Types.ObjectId,
+        ref: "Product",
+      },
+    ],
     status: {
       type: String,
-      enum: ["active", "inactive"],
+      enum: ["active", "inactive", "banned"],
       default: "active",
     },
   },
@@ -45,4 +60,4 @@ const employeeSchema = new Schema(
   }
 );
 
-export default model("Employee", employeeSchema);
+export default model("Customer", customerSchema);
