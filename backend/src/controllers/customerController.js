@@ -1,34 +1,34 @@
-import adminModel from "../models/adminModels.js";
+import customerModel from "../models/customerModels.js";
 import crudUtils from "../utils/users/crudUtils.js";
 import validationUtils from "../utils/auth/validationsUsersUtils.js";
 
-const adminController = {};
+const customerController = {};
 
-adminController.getAdmins = async (req, res) => {
+customerController.getCustomers = async (req, res) => {
     try {
-        const admins = await crudUtils.searchDocuments(adminModel, req.query);
-        return res.status(200).json(admins);
+        const customers = await crudUtils.searchDocuments(customerModel, req.query);
+        return res.status(200).json(customers);
     } catch (error) {
-        console.error("Error getting admins:", error);
+        console.error("Error getting customers:", error);
         return res.status(500).json({ message: "Internal server error" });
     }
 };
 
-adminController.deleteAdmin = async (req, res) => {
+customerController.deleteCustomer = async (req, res) => {
     try {
-        const deleted = await crudUtils.deleteDocumentById(adminModel, req.params.id);
-        if (!deleted) return res.status(404).json({ message: "Admin not found" });
+        const deleted = await crudUtils.deleteDocumentById(customerModel, req.params.id);
+        if (!deleted) return res.status(404).json({ message: "Customer not found" });
 
-        return res.status(200).json({ message: "Admin deleted successfully" });
+        return res.status(200).json({ message: "Customer deleted successfully" });
     } catch (error) {
-        console.error("Error deleting admin:", error);
+        console.error("Error deleting customer:", error);
         return res.status(500).json({ message: "Internal server error" });
     }
 };
 
-adminController.updateAdmin = async (req, res) => {
+customerController.updateCustomer = async (req, res) => {
     try {
-        const { name, lastName, phone, local, status } = req.body;
+        const { name, lastName, carnet, phone, status } = req.body;
         const updateData = {};
         const validationsToRun = [];
 
@@ -40,8 +40,8 @@ adminController.updateAdmin = async (req, res) => {
             validationsToRun.push(() => validationUtils.validateName(lastName, "Last name"));
             updateData.lastName = lastName.trim();
         }
+        if (carnet !== undefined) updateData.carnet = carnet.trim();
         if (phone !== undefined) updateData.phone = phone.trim();
-        if (local !== undefined) updateData.local = local.trim();
         if (status !== undefined) updateData.status = status;
 
         if (validationsToRun.length > 0) {
@@ -49,19 +49,19 @@ adminController.updateAdmin = async (req, res) => {
             if (!result.valid) return res.status(400).json({ message: result.message });
         }
 
-        const updatedAdmin = await adminModel.findByIdAndUpdate(
+        const updatedCustomer = await customerModel.findByIdAndUpdate(
             req.params.id,
             { $set: updateData },
             { new: true }
         ).select("-password");
 
-        if (!updatedAdmin) return res.status(404).json({ message: "Admin not found" });
+        if (!updatedCustomer) return res.status(404).json({ message: "Customer not found" });
 
-        return res.status(200).json({ message: "Admin updated successfully", data: updatedAdmin });
+        return res.status(200).json({ message: "Customer updated successfully", data: updatedCustomer });
     } catch (error) {
-        console.error("Error updating admin:", error);
+        console.error("Error updating customer:", error);
         return res.status(500).json({ message: "Internal server error" });
     }
 };
 
-export default adminController;
+export default customerController;

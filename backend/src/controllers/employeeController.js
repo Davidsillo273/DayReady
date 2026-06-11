@@ -1,32 +1,32 @@
-import adminModel from "../models/adminModels.js";
+import employeeModel from "../models/employeeModels.js";
 import crudUtils from "../utils/users/crudUtils.js";
 import validationUtils from "../utils/auth/validationsUsersUtils.js";
 
-const adminController = {};
+const employeeController = {};
 
-adminController.getAdmins = async (req, res) => {
+employeeController.getEmployees = async (req, res) => {
     try {
-        const admins = await crudUtils.searchDocuments(adminModel, req.query);
-        return res.status(200).json(admins);
+        const employees = await crudUtils.searchDocuments(employeeModel, req.query);
+        return res.status(200).json(employees);
     } catch (error) {
-        console.error("Error getting admins:", error);
+        console.error("Error getting employees:", error);
         return res.status(500).json({ message: "Internal server error" });
     }
 };
 
-adminController.deleteAdmin = async (req, res) => {
+employeeController.deleteEmployee = async (req, res) => {
     try {
-        const deleted = await crudUtils.deleteDocumentById(adminModel, req.params.id);
-        if (!deleted) return res.status(404).json({ message: "Admin not found" });
+        const deleted = await crudUtils.deleteDocumentById(employeeModel, req.params.id);
+        if (!deleted) return res.status(404).json({ message: "Employee not found" });
 
-        return res.status(200).json({ message: "Admin deleted successfully" });
+        return res.status(200).json({ message: "Employee deleted successfully" });
     } catch (error) {
-        console.error("Error deleting admin:", error);
+        console.error("Error deleting employee:", error);
         return res.status(500).json({ message: "Internal server error" });
     }
 };
 
-adminController.updateAdmin = async (req, res) => {
+employeeController.updateEmployee = async (req, res) => {
     try {
         const { name, lastName, phone, local, status } = req.body;
         const updateData = {};
@@ -49,19 +49,19 @@ adminController.updateAdmin = async (req, res) => {
             if (!result.valid) return res.status(400).json({ message: result.message });
         }
 
-        const updatedAdmin = await adminModel.findByIdAndUpdate(
+        const updatedEmployee = await employeeModel.findByIdAndUpdate(
             req.params.id,
             { $set: updateData },
             { new: true }
         ).select("-password");
 
-        if (!updatedAdmin) return res.status(404).json({ message: "Admin not found" });
+        if (!updatedEmployee) return res.status(404).json({ message: "Employee not found" });
 
-        return res.status(200).json({ message: "Admin updated successfully", data: updatedAdmin });
+        return res.status(200).json({ message: "Employee updated successfully", data: updatedEmployee });
     } catch (error) {
-        console.error("Error updating admin:", error);
+        console.error("Error updating employee:", error);
         return res.status(500).json({ message: "Internal server error" });
     }
 };
 
-export default adminController;
+export default employeeController;
