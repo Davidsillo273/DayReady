@@ -37,6 +37,9 @@ export default function Storefront() {
         ]
     };
 
+    // Combinar todos los productos para pasar al carrito
+    const allProducts = [...data.destacados, ...data.snacks, ...data.bebidas];
+
     const handleCheckout = () => {
         setIsCartOpen(false);
         setIsCheckoutOpen(true);
@@ -107,6 +110,7 @@ export default function Storefront() {
                 isOpen={isCartOpen}
                 onClose={() => setIsCartOpen(false)}
                 onCheckout={handleCheckout}
+                products={allProducts}
             />
         </div>
     );

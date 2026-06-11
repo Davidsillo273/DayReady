@@ -1,14 +1,57 @@
 import React, { useState } from 'react';
+import { useCart } from '../context/CartContext';
+import * as cartService from '../services/cartService';
 
 export default function ProductModal({ isOpen, onClose, product }) {
   const [quantity, setQuantity] = useState(1);
   const [extras, setExtras] = useState({ papas: false, soda: false });
+  const [loading, setLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  const { addToCart, cartId, setCartId, customerId, items } = useCart();
 
   if (!isOpen || !product) return null;
 
   // Calculamos el total dinámico basado en la cantidad y los extras
   const extrasTotal = (extras.papas ? 1.50 : 0) + (extras.soda ? 1.00 : 0);
   const total = ((product.price + extrasTotal) * quantity).toFixed(2);
+
+  // Manejar agregar al carrito
+  const handleAddToCart = async () => {
+    if (!customerId) {
+      alert('Por favor, inicia sesión primero');
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      // Agregar al estado local del carrito
+      await addToCart(product.id, quantity, extras);
+
+      // Si no hay carrito, crear uno
+      if (!cartId) {
+        const newCart = await cartService.createCart(customerId, [
+          { productoId: product.id, cantidad: quantity }
+        ]);
+        setCartId(newCart._id);
+      } else {
+        // Si ya existe carrito, actualizarlo
+        const updatedItems = [...items, { productoId: product.id, cantidad: quantity }];
+        await cartService.updateCart(cartId, updatedItems);
+      }
+
+      setSuccessMessage('¡Producto agregado al carrito!');
+      setTimeout(() => {
+        setSuccessMessage('');
+        onClose();
+      }, 1500);
+    } catch (error) {
+      console.error('Error al agregar al carrito:', error);
+      alert('Error al agregar el producto al carrito');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in">
@@ -95,15 +138,19 @@ export default function ProductModal({ isOpen, onClose, product }) {
           </div>
 
           <button 
-            className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 rounded-xl transition flex justify-between px-6 shadow-md hover:shadow-lg active:scale-[0.98]"
-            onClick={() => {
-              console.log("Agregado al carrito:", { ...product, quantity, extras, total });
-              onClose();
-            }}
+            className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 rounded-xl transition flex justify-between px-6 shadow-md hover:shadow-lg active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={handleAddToCart}
+            disabled={loading}
           >
-            <span>Agregar a mi pedido</span>
+            <span>{loading ? 'Agregando...' : 'Agregar a mi pedido'}</span>
             <span>${total}</span>
           </button>
+
+          {successMessage && (
+            <div className="mt-3 p-3 bg-green-100 text-green-800 rounded-lg text-center text-sm font-medium">
+              {successMessage}
+            </div>
+          )}
         </div>
 
       </div>

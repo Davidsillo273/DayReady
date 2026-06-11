@@ -1,7 +1,44 @@
 import React, { useState } from 'react';
+import { useCart } from '../context/CartContext';
+import * as cartService from '../services/cartService';
 
 export default function CheckoutModal({ isOpen, onClose }) {
-  const [method, setMethod] = useState('wallet'); 
+  const [method, setMethod] = useState('wallet');
+  const [loading, setLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  const { totalFinal, cartId, clearCart } = useCart();
+
+  const handleCheckout = async () => {
+    if (!cartId) {
+      alert('No hay carrito para procesar');
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      // Aquí puedes integrar con un servicio de pagos
+      // Por ahora, solo simularemos el pago
+      console.log(`Procesando pago de $${totalFinal.toFixed(2)} con método: ${method}`);
+
+      // Simular procesamiento
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
+      setSuccessMessage('¡Pedido realizado exitosamente! 🎉');
+      
+      // Limpiar carrito después del éxito
+      setTimeout(() => {
+        clearCart();
+        setSuccessMessage('');
+        onClose();
+      }, 2000);
+    } catch (error) {
+      console.error('Error al procesar el pago:', error);
+      alert('Error al procesar el pago. Por favor, intenta de nuevo.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -11,7 +48,7 @@ export default function CheckoutModal({ isOpen, onClose }) {
         
         <div className="flex justify-between items-center mb-8">
             <h2 className="text-xl font-bold text-gray-800 tracking-tight">Finalizar Pedido</h2>
-            <button onClick={onClose} className="p-2 hover:bg-gray-50 rounded-full transition">
+            <button onClick={onClose} className="p-2 hover:bg-gray-50 rounded-full transition" disabled={loading}>
                 <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
         </div>
@@ -20,10 +57,10 @@ export default function CheckoutModal({ isOpen, onClose }) {
         <div className="bg-slate-50 rounded-2xl p-5 mb-8 flex justify-between items-center border border-slate-100">
             <div>
                 <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Total a pagar</p>
-                <p className="text-2xl font-bold text-slate-800 mt-1">$10.75</p>
+                <p className="text-2xl font-bold text-slate-800 mt-1">${totalFinal.toFixed(2)}</p>
             </div>
             <div className="text-right">
-                <p className="text-xs font-medium text-slate-600 bg-white px-3 py-1.5 rounded-lg border border-slate-100">3 Productos</p>
+                <p className="text-xs font-medium text-slate-600 bg-white px-3 py-1.5 rounded-lg border border-slate-100">ID: {cartId ? cartId.substring(0, 8) : 'N/A'}</p>
             </div>
         </div>
 
@@ -32,7 +69,7 @@ export default function CheckoutModal({ isOpen, onClose }) {
         <div className="space-y-3 mb-8">
             {/* Opción Wallet */}
             <div 
-                onClick={() => setMethod('wallet')}
+                onClick={() => !loading && setMethod('wallet')}
                 className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${method === 'wallet' ? 'border-slate-800 bg-slate-50/50' : 'border-gray-100 hover:border-gray-200'}`}
             >
                 <div className="flex items-center gap-4">
@@ -51,7 +88,7 @@ export default function CheckoutModal({ isOpen, onClose }) {
 
             {/* Opción Tarjeta */}
             <div 
-                onClick={() => setMethod('card')}
+                onClick={() => !loading && setMethod('card')}
                 className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${method === 'card' ? 'border-slate-800 bg-slate-50/50' : 'border-gray-100 hover:border-gray-200'}`}
             >
                 <div className="flex items-center gap-4">
@@ -69,9 +106,19 @@ export default function CheckoutModal({ isOpen, onClose }) {
             </div>
         </div>
 
-        {/* Botón Principal más neutro y premium */}
-        <button className="w-full bg-slate-800 text-white py-4 rounded-2xl font-semibold shadow-md hover:bg-slate-900 transition-all active:scale-[0.98] text-sm">
-            {method === 'wallet' ? 'Pagar con DayWallet' : 'Continuar con Tarjeta'}
+        {successMessage && (
+          <div className="mb-4 p-3 bg-green-100 text-green-800 rounded-lg text-center text-sm font-medium">
+            {successMessage}
+          </div>
+        )}
+
+        {/* Botón Principal */}
+        <button 
+          onClick={handleCheckout}
+          disabled={loading}
+          className="w-full bg-slate-800 text-white py-4 rounded-2xl font-semibold shadow-md hover:bg-slate-900 transition-all active:scale-[0.98] text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+            {loading ? 'Procesando...' : (method === 'wallet' ? 'Pagar con DayWallet' : 'Continuar con Tarjeta')}
         </button>
       </div>
     </div>
