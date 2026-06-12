@@ -6,29 +6,21 @@ import LoadingSpinner from '../../components/LoadingSpinner';
 import dayReadyLogo from '../../imgs/DayReadyLogo.png';
 import backgroundImage from '../../imgs/backGroundLogin.png';
 
-export default function RegisterUser() {
+const BASE_URL = 'http://localhost:4000/api';
 
-  // Para cuando esté la API
-  // const registerCustomer = async (datos) => {
-  //   const response = await fetch('https://tu-api.com/registro', {
-  //     method: 'POST',
-  //     body: JSON.stringify(datos),
-  //     headers: { 'Content-Type': 'application/json' }
-  //   });
-  //   return response.json();
-  // };
-
+export default function RegisterCustomer() {
   const navigate = useNavigate();
 
   const [step, setStep] = useState(1);
   const [verificationCode, setVerificationCode] = useState('');
 
   const [formData, setFormData] = useState({
-    names: '',
-    lastNames: '',
     email: '',
-    password: '',
+    name: '',
+    lastName: '',
+    carnet: '',
     phone: '',
+    password: '',
     terms: false,
   });
 
@@ -39,6 +31,7 @@ export default function RegisterUser() {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
     if (errors[name]) setErrors({ ...errors, [name]: null });
+    if (errors.general) setErrors({ ...errors, general: null });
   };
 
   // --- PASO 1: Validar correo y enviar código ---
@@ -51,12 +44,24 @@ export default function RegisterUser() {
 
     setLoading(true);
     try {
+      const response = await fetch(`${BASE_URL}/auth/customers/register/sendCode`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email: formData.email }),
+      });
 
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      console.log('Código enviado a:', formData.email);
+      const data = await response.json();
+
+      if (!response.ok) {
+        setErrors({ general: data.message });
+        return;
+      }
+
       setStep(2);
     } catch (error) {
       console.error('Error al enviar código:', error);
+      setErrors({ general: 'No se pudo conectar con el servidor.' });
     } finally {
       setLoading(false);
     }
@@ -72,26 +77,37 @@ export default function RegisterUser() {
 
     setLoading(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      console.log('Código verificado:', verificationCode);
+      const response = await fetch(`${BASE_URL}/auth/customers/register/verifyCode`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ code: verificationCode }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setErrors({ general: data.message });
+        return;
+      }
+
       setStep(3);
     } catch (error) {
       console.error('Error al verificar código:', error);
+      setErrors({ general: 'No se pudo conectar con el servidor.' });
     } finally {
       setLoading(false);
     }
   };
 
-  // --- PASO 3: Registro final ---
-  const handleInsertData = async (e) => {
+  // --- PASO 3: Información personal ---
+  const handlePersonalInfo = async (e) => {
     e.preventDefault();
 
-    // Validación final
     const newErrors = {};
-    if (!formData.names.trim()) newErrors.names = 'Requerido';
-    if (!formData.lastNames.trim()) newErrors.lastNames = 'Requerido';
-    if (!formData.password) newErrors.password = 'Requerida';
-    if (formData.password.length < 6) newErrors.password = 'Mínimo 6 caracteres';
+    if (!formData.name.trim()) newErrors.name = 'Requerido';
+    if (!formData.lastName.trim()) newErrors.lastName = 'Requerido';
+    if (!formData.carnet.trim()) newErrors.carnet = 'Requerido';
     if (!formData.phone.trim()) newErrors.phone = 'Requerido';
 
     if (Object.keys(newErrors).length > 0) {
@@ -100,33 +116,43 @@ export default function RegisterUser() {
     }
 
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      const response = await fetch(`${BASE_URL}/auth/customers/register/personalInfo`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          name: formData.name,
+          lastName: formData.lastName,
+          carnet: formData.carnet,
+          phone: formData.phone,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setErrors({ general: data.message });
+        return;
+      }
+
       setStep(4);
-    }, 500);
+    } catch (error) {
+      console.error('Error al guardar información personal:', error);
+      setErrors({ general: 'No se pudo conectar con el servidor.' });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // --- PASO 4: Aceptar Términos y Registro Final ---
-  // const handleFinalRegistration = async (e) => {
-  //   e.preventDefault();
-  //   if (!formData.terms) {
-  //     setErrors({ terms: 'Debes aceptar los términos' });
-  //     return;
-  //   }
-
-  //   setLoading(true);
-  //   try {
-  //     await registerCustomer(formData);
-  //     navigate('/');
-  //   } catch (error) {
-  //     console.error('Error al registrar usuario:', error);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
+  // --- PASO 4: Contraseña, términos y registro final ---
   const handleFinalRegistration = async (e) => {
     e.preventDefault();
+
+    if (!formData.password) {
+      setErrors({ password: 'La contraseña es requerida' });
+      return;
+    }
     if (!formData.terms) {
       setErrors({ terms: 'Debes aceptar los términos' });
       return;
@@ -134,13 +160,24 @@ export default function RegisterUser() {
 
     setLoading(true);
     try {
-      // Simulamos que el servidor responde con éxito en 1.5 segundos
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const response = await fetch(`${BASE_URL}/auth/customers/register/setPassword`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ password: formData.password }),
+      });
 
-      console.log("Datos enviados:", formData);
-      navigate('/'); // Ahora sí te mandará al Login
+      const data = await response.json();
+
+      if (!response.ok) {
+        setErrors({ general: data.message });
+        return;
+      }
+
+      navigate('/');
     } catch (error) {
-      console.error(error);
+      console.error('Error al registrar usuario:', error);
+      setErrors({ general: 'No se pudo conectar con el servidor.' });
     } finally {
       setLoading(false);
     }
@@ -164,12 +201,19 @@ export default function RegisterUser() {
             <p className="text-gray-600 text-sm font-medium">
               {step === 1 && "Ingresa tu correo para comenzar"}
               {step === 2 && "Ingresa tu código para verificar tu cuenta"}
-              {step === 3 && "Ingresa tus datos para finalizar el registro"}
-              {step === 4 && "Acepta los términos y condiciones para continuar"}
+              {step === 3 && "Ingresa tus datos personales"}
+              {step === 4 && "Crea tu contraseña y acepta los términos"}
             </p>
           </div>
 
-          {/* ---- INTERFAZ PASO 1 ---- */}
+          {/* Error general */}
+          {errors.general && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-red-600 text-sm text-center">{errors.general}</p>
+            </div>
+          )}
+
+          {/* ---- PASO 1 ---- */}
           {step === 1 && (
             <form onSubmit={handleSendCode}>
               <InputField
@@ -192,7 +236,7 @@ export default function RegisterUser() {
             </form>
           )}
 
-          {/* ---- INTERFAZ PASO 2 ---- */}
+          {/* ---- PASO 2 ---- */}
           {step === 2 && (
             <form onSubmit={handleVerifyCode}>
               <p className="text-xs text-gray-500 mb-4 text-center">
@@ -229,27 +273,37 @@ export default function RegisterUser() {
             </form>
           )}
 
-          {/* ---- INTERFAZ PASO 3 ---- */}
+          {/* ---- PASO 3 ---- */}
           {step === 3 && (
-            <form onSubmit={handleInsertData}>
+            <form onSubmit={handlePersonalInfo}>
               <InputField
                 label="Nombres"
                 type="text"
-                name="names"
+                name="name"
                 placeholder="Ej. David Eduardo"
-                value={formData.names}
+                value={formData.name}
                 onChange={handleChange}
-                error={errors.names}
+                error={errors.name}
                 required
               />
               <InputField
                 label="Apellidos"
                 type="text"
-                name="lastNames"
+                name="lastName"
                 placeholder="Ej. Pérez García"
-                value={formData.lastNames}
+                value={formData.lastName}
                 onChange={handleChange}
-                error={errors.lastNames}
+                error={errors.lastName}
+                required
+              />
+              <InputField
+                label="Carnet"
+                type="text"
+                name="carnet"
+                placeholder="Ej. AB123456"
+                value={formData.carnet}
+                onChange={handleChange}
+                error={errors.carnet}
                 required
               />
               <InputField
@@ -262,6 +316,29 @@ export default function RegisterUser() {
                 error={errors.phone}
                 required
               />
+
+              <div className="flex gap-2 mt-4">
+                <button
+                  type="button"
+                  onClick={() => setStep(2)}
+                  className="w-1/3 border border-gray-300 text-gray-600 py-2 rounded-lg hover:bg-gray-50"
+                >
+                  Volver
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-2/3 bg-green-500 hover:bg-green-600 text-white font-medium py-2 rounded-lg"
+                >
+                  {loading ? <LoadingSpinner /> : 'Siguiente'}
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/* ---- PASO 4: CONTRASEÑA Y TÉRMINOS ---- */}
+          {step === 4 && (
+            <form onSubmit={handleFinalRegistration}>
               <InputField
                 label="Contraseña"
                 type="password"
@@ -273,19 +350,6 @@ export default function RegisterUser() {
                 required
               />
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full mt-4 bg-green-500 hover:bg-green-600 text-white font-medium py-2 rounded-lg"
-              >
-                {loading ? <LoadingSpinner /> : 'Siguiente'}
-              </button>
-            </form>
-          )}
-
-          {/* ---- INTERFAZ PASO 4: TÉRMINOS Y CONDICIONES ---- */}
-          {step === 4 && (
-            <form onSubmit={handleFinalRegistration}>
               <div className="mt-4 mb-6">
                 <label className="flex items-start cursor-pointer">
                   <input
@@ -306,13 +370,11 @@ export default function RegisterUser() {
                   </span>
                 </label>
 
-                {/* Mensaje de error si intentan avanzar sin aceptar */}
                 {errors.terms && (
                   <p className="text-red-500 text-xs mt-2 ml-6">{errors.terms}</p>
                 )}
               </div>
 
-              {/* Botones de navegación */}
               <div className="flex gap-2">
                 <button
                   type="button"
