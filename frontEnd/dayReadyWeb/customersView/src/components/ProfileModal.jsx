@@ -1,12 +1,17 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import PersonalInfoView from './profile/PersonalInfoView';
 import OrdersView from './profile/OrdersView';
 import CardsView from './profile/CardsView';
 import NotificationsView from './profile/NotificationsView';
 import HelpView from './profile/HelpView';
 
+const BASE_URL = 'http://localhost:4000/api';
+
 export default function ProfileModal({ isOpen, onClose }) {
+  const navigate = useNavigate();
   const [view, setView] = useState('menu'); // Estado para navegar entre secciones
+  const [loggingOut, setLoggingOut] = useState(false);
 
   if (!isOpen) return null;
 
@@ -14,6 +19,23 @@ export default function ProfileModal({ isOpen, onClose }) {
   const handleFullClose = () => {
     setView('menu');
     onClose();
+  };
+
+  // Cierra sesión en el backend y redirige al login
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    try {
+      await fetch(`${BASE_URL}/auth/logout`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
+    } finally {
+      setLoggingOut(false);
+      onClose();
+      navigate('/');
+    }
   };
 
   // Mapeo de iconos para el menú principal
@@ -28,7 +50,7 @@ export default function ProfileModal({ isOpen, onClose }) {
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/20 backdrop-blur-sm p-4">
       <div className="bg-white w-full max-w-sm rounded-[32px] overflow-hidden shadow-xl border border-gray-100 animate-in fade-in zoom-in duration-300">
-        
+
         {/* Renderizado condicional según la vista */}
         {view === 'menu' ? (
           <>
@@ -54,8 +76,12 @@ export default function ProfileModal({ isOpen, onClose }) {
                 <MenuButton title="Ayuda" sub="Soporte técnico" icon={icons.help} color="bg-gray-50 text-gray-600" onClick={() => setView('help')} />
               </div>
 
-              <button className="mt-6 w-full py-4 text-red-700/80 font-semibold text-sm hover:bg-red-50 rounded-2xl transition" onClick={() => window.location.href = "/login"}>
-                Cerrar Sesión
+              <button
+                className="mt-6 w-full py-4 text-red-700/80 font-semibold text-sm hover:bg-red-50 rounded-2xl transition disabled:opacity-50"
+                onClick={handleLogout}
+                disabled={loggingOut}
+              >
+                {loggingOut ? 'Cerrando sesión...' : 'Cerrar Sesión'}
               </button>
             </div>
           </>

@@ -30,7 +30,7 @@ registerCustomerController.sendCode = async (req, res) => {
 
     await emailUtils.sendEmail(
       email,
-      "Account Verification – SYSCOR",
+      "Account Verification – Day Ready",
       emailUtils.HTMLVerificationEmail(verificationCode)
     );
 
