@@ -6,7 +6,7 @@ import Customers from "../../models/customerModels.js";
 
 import validationUtils from "../../utils/auth/validationsUsersUtils.js";
 import emailUtils from "../../utils/auth/emailUtils.js";
-import  cookieConfig  from "../../config/cookieConfig.js";
+import cookieConfig from "../../config/cookieConfig.js";
 
 const ROLES_MODELS = {
     admin: Admin,
@@ -18,29 +18,38 @@ const recoveryPasswordController = {};
 
 recoveryPasswordController.requestCode = async (req, res) => {
     try {
-        const { email, userType } = req.body;
+        const { email } = req.body;
 
         const validation = validationUtils.runValidations([
             () => validationUtils.validateEmail(email)
         ]);
         if (!validation.valid) return res.status(400).json({ message: validation.message });
 
-        const targetModel = ROLES_MODELS[userType];
-        if (!targetModel) {
-            return res.status(400).json({ message: "Invalid user type." });
+        const normalizedEmail = email.toLowerCase().trim();
+
+        // Search across all roles to find which collection this email belongs to
+        let userFound = null;
+        let userType = null;
+
+        for (const [role, Model] of Object.entries(ROLES_MODELS)) {
+            const found = await Model.findOne({ email: normalizedEmail });
+            if (found) {
+                userFound = found;
+                userType = role;
+                break;
+            }
         }
 
-        const userFound = await targetModel.findOne({ "loginInfo.email": email.toLowerCase() });
         if (!userFound) {
             return res.status(404).json({ message: "User not found." });
         }
 
         const code = emailUtils.generateVerificationCode();
-        const token = emailUtils.generateToken({ email, code, userType, verified: false }, "15m");
+        const token = emailUtils.generateToken({ email: normalizedEmail, code, userType, verified: false }, "15m");
 
         await emailUtils.sendEmail(
             email,
-            "Day Ready - Password Recovery",
+            "DayReady - Password Recovery",
             emailUtils.HTMLRecoveryEmail(code)
         );
 
@@ -111,8 +120,8 @@ recoveryPasswordController.newPassword = async (req, res) => {
         const targetModel = ROLES_MODELS[decoded.userType];
 
         await targetModel.findOneAndUpdate(
-            { "loginInfo.email": decoded.email },
-            { $set: { "loginInfo.password": passwordHash, "loginInfo.loginAttempts": 0, "loginInfo.timeOut": null } },
+            { email: decoded.email },
+            { $set: { password: passwordHash, loginAttempts: 0, timeOut: null } },
             { new: true }
         );
 
