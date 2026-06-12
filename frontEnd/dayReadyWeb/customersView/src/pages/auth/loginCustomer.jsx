@@ -6,6 +6,8 @@ import LoadingSpinner from '../../components/LoadingSpinner';
 import dayReadyLogo from '../../imgs/DayReadyLogo.png';
 import backgroundImage from '../../imgs/backGroundLogin.png';
 
+const BASE_URL = 'http://localhost:4000/api';
+
 export default function LoginCustomer() {
     const navigate = useNavigate();
     const [email, setEmail] = useState('');
@@ -27,13 +29,32 @@ export default function LoginCustomer() {
 
         setLoading(true);
         try {
+            const response = await fetch(`${BASE_URL}/auth/customers/login`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+                body: JSON.stringify({ email, password }),
+            });
 
-            await new Promise((resolve) => setTimeout(resolve, 2000));
-            console.log('Login attempt:', { email, password });
+            const data = await response.json();
+
+            if (!response.ok) {
+                if (response.status === 401 || response.status === 404) {
+                    setErrors({ general: data.message });
+                } else if (response.status === 403) {
+                    setErrors({ general: data.message });
+                } else {
+                    setErrors({ general: 'Error al iniciar sesión. Intenta de nuevo.' });
+                }
+                return;
+            }
 
             navigate('/storefront');
         } catch (error) {
             console.error('Error al iniciar sesión:', error);
+            setErrors({ general: 'No se pudo conectar con el servidor.' });
         } finally {
             setLoading(false);
         }
@@ -48,7 +69,6 @@ export default function LoginCustomer() {
         >
 
             <div className="w-full max-w-xl px-4">
-
 
                 {/* Formulario */}
                 <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-lg p-8 max-w-lg mx-auto">
@@ -67,6 +87,13 @@ export default function LoginCustomer() {
                         <h1 className="text-gray-800 text-2xl font-bold">Bienvenido, cliente</h1>
                         <p className="text-gray-600 text-sm mt-2">Inicia sesión para continuar</p>
                     </div>
+
+                    {/* Error general */}
+                    {errors.general && (
+                        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                            <p className="text-red-600 text-sm text-center">{errors.general}</p>
+                        </div>
+                    )}
 
                     <InputField
                         label="Correo"
@@ -93,8 +120,6 @@ export default function LoginCustomer() {
                         error={errors.password}
                         required
                     />
-
-                    <form onSubmit={handleSubmit}></form>
 
                     {/* Botón Ingresar */}
                     <Button
