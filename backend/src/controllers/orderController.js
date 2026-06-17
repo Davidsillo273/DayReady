@@ -1,17 +1,11 @@
 import orderModel from "../models/orderModels.js";
-import cartModel from "../models/cartModels.js";
 
-// Array de métodos
 const orderController = {};
 
 // Obtener todas las órdenes
 orderController.getAllOrders = async (req, res) => {
   try {
-    const orders = await orderModel
-      .find()
-      .populate("carritoComprasId", "total totalFinal")
-      .exec();
-
+    const orders = await orderModel.find().sort({ fecha: -1 });
     return res.status(200).json(orders);
   } catch (error) {
     console.log("error" + error);
@@ -22,14 +16,10 @@ orderController.getAllOrders = async (req, res) => {
 // Obtener una orden por ID
 orderController.getOrderById = async (req, res) => {
   try {
-    const order = await orderModel
-      .findById(req.params.id)
-      .populate("carritoComprasId", "total totalFinal");
-
+    const order = await orderModel.findById(req.params.id);
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
     }
-
     return res.status(200).json(order);
   } catch (error) {
     console.log("error" + error);
@@ -40,35 +30,36 @@ orderController.getOrderById = async (req, res) => {
 // Crear una orden
 orderController.insertOrder = async (req, res) => {
   try {
-    // Solicitar los datos
-    const { carritoComprasId, estadoPago, estado } = req.body;
+    const { customerName, customerContact, items, total, estadoPago, estado } = req.body;
 
     // Validaciones
-    if (!carritoComprasId) {
-      return res.status(400).json({ message: "Cart ID is required" });
+    if (!customerName || !items || items.length === 0) {
+      return res.status(400).json({ message: "Customer name and at least one item are required" });
     }
 
-    // Verificar que el carrito existe
-    const cartFound = await cartModel.findById(carritoComprasId);
-    if (!cartFound) {
-      return res.status(404).json({ message: "Cart not found" });
-    }
+    // Calcular total si no viene
+    const calculatedTotal = total !== undefined ? total : items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
-    // Obtener la hora actual
+    // Generar hora de creación
     const now = new Date();
     const horaCreacion = now.toLocaleTimeString("es-ES");
 
-    // Crear la nueva orden
     const newOrder = new orderModel({
-      carritoComprasId,
-      estadoPago: estadoPago || false,
+      customerName: customerName.trim(),
+      customerContact: customerContact?.trim() || "",
+      items: items.map(item => ({
+        name: item.name.trim(),
+        quantity: Number(item.quantity),
+        price: Number(item.price),
+      })),
+      total: Number(calculatedTotal),
+      estadoPago: estadoPago === true || estadoPago === "true",
       estado: estado || "pendiente",
       fecha: now,
       horaCreacion,
     });
 
     await newOrder.save();
-
     return res.status(201).json({ message: "Order created", order: newOrder });
   } catch (error) {
     console.log("error" + error);
@@ -79,51 +70,42 @@ orderController.insertOrder = async (req, res) => {
 // Actualizar una orden
 orderController.updateOrder = async (req, res) => {
   try {
-    // Solicitar los datos
-    const { carritoComprasId, estadoPago, estado, horaEntrega } = req.body;
+    const { customerName, customerContact, items, total, estadoPago, estado, horaEntrega } = req.body;
 
-    // Si se actualiza el estado a "entregado", registrar la hora de entrega
-    let updateData = {
-      estadoPago: estadoPago !== undefined ? estadoPago : undefined,
-      estado: estado || undefined,
-    };
+    const updateData = {};
 
-    // Limpiar undefined
-    Object.keys(updateData).forEach(
-      (key) => updateData[key] === undefined && delete updateData[key]
-    );
+    // Solo actualizar campos que vengan definidos
+    if (customerName !== undefined) updateData.customerName = customerName.trim();
+    if (customerContact !== undefined) updateData.customerContact = customerContact.trim();
+    if (items !== undefined) {
+      updateData.items = items.map(item => ({
+        name: item.name.trim(),
+        quantity: Number(item.quantity),
+        price: Number(item.price),
+      }));
+    }
+    if (total !== undefined) updateData.total = Number(total);
+    if (estadoPago !== undefined) updateData.estadoPago = estadoPago === true || estadoPago === "true";
 
-    // Si el estado es "entregado" y no viene horaEntrega, generarla
-    if (estado === "entregado" && !horaEntrega) {
-      const now = new Date();
-      updateData.horaEntrega = now.toLocaleTimeString("es-ES");
-    } else if (horaEntrega) {
+    if (estado !== undefined) {
+      updateData.estado = estado;
+      // Si se marca como entregado y no se envía horaEntrega, se genera automáticamente
+      if (estado === "entregado" && !horaEntrega) {
+        const now = new Date();
+        updateData.horaEntrega = now.toLocaleTimeString("es-ES");
+      }
+    }
+    if (horaEntrega !== undefined) {
       updateData.horaEntrega = horaEntrega;
     }
 
-    // Si se proporciona carritoComprasId, validar que exista
-    if (carritoComprasId) {
-      const cartFound = await cartModel.findById(carritoComprasId);
-      if (!cartFound) {
-        return res.status(404).json({ message: "Cart not found" });
-      }
-      updateData.carritoComprasId = carritoComprasId;
-    }
-
-    // Actualizar en la base de datos
-    const updatedOrder = await orderModel.findByIdAndUpdate(
-      req.params.id,
-      updateData,
-      { new: true }
-    );
+    const updatedOrder = await orderModel.findByIdAndUpdate(req.params.id, updateData, { new: true });
 
     if (!updatedOrder) {
       return res.status(404).json({ message: "Order not found" });
     }
 
-    return res
-      .status(200)
-      .json({ message: "Order updated", order: updatedOrder });
+    return res.status(200).json({ message: "Order updated", order: updatedOrder });
   } catch (error) {
     console.log("error" + error);
     return res.status(500).json({ message: "Internal server error" });
@@ -134,11 +116,9 @@ orderController.updateOrder = async (req, res) => {
 orderController.deleteOrder = async (req, res) => {
   try {
     const order = await orderModel.findByIdAndDelete(req.params.id);
-
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
     }
-
     return res.status(200).json({ message: "Order deleted" });
   } catch (error) {
     console.log("error" + error);
