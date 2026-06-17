@@ -34,6 +34,11 @@ const customerSchema = new Schema(
       type: String,
       required: true,
     },
+    balance: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
     addresses: [
       {
         label: { type: String, trim: true },
@@ -48,6 +53,14 @@ const customerSchema = new Schema(
         ref: "Product",
       },
     ],
+    loginAttempts: {
+      type: Number,
+      default: 0,
+    },
+    timeOut: {
+      type: Date,
+      default: null,
+    },
     status: {
       type: String,
       enum: ["active", "inactive", "banned"],
@@ -60,4 +73,4 @@ const customerSchema = new Schema(
   }
 );
 
-export default model("Customer", customerSchema);
+export default model("Customers", customerSchema);

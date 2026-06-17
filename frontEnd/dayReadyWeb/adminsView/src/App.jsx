@@ -6,9 +6,11 @@ import Menu from './Pages/menu';
 import Products from './Pages/products';
 import Orders from './Pages/orders';
 import Sales from './Pages/sales';
-import Clients from './Pages/clients';
-import RegisterUser from './Pages/registerUser';
+import Customers from './Pages/customer';
 import RecoveryPass from './Pages/recoveryPass';
+import InviteAdmin from './Pages/inviteAdmin';
+import InviteEmployee from './Pages/InviteEmployee';
+import AcceptInvitation from './Pages/acceptInvitation';
 function App() {
 
   console.log("App se está cargando...");
@@ -24,8 +26,11 @@ function App() {
         <Route path="/admin/products" element={<Products />} />
         <Route path="/admin/orders" element={<Orders />} />
         <Route path="/admin/sales" element={<Sales />} />
-        <Route path="/admin/customers" element={<Clients />} />
-        <Route path="/admin/register" element={<RegisterUser />} />
+        <Route path="/admin/customers" element={<Customers />} />|
+        <Route path="/admin/inviteAdmin" element={<InviteAdmin />} />
+        <Route path="/admin/inviteEmployee" element={<InviteEmployee />} />
+        <Route path="/admin/accept-invitation" element={<AcceptInvitation />} />
+        <Route path="/employee/accept-invitation" element={<AcceptInvitation />} />
         <Route path="/admin/recovery" element={<RecoveryPass />} />
 
         {/* 404 - Redirigir al inicio si la ruta no existe */}

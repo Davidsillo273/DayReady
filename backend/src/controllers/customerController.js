@@ -64,4 +64,32 @@ customerController.updateCustomer = async (req, res) => {
     }
 };
 
+customerController.addBalance = async (req, res) => {
+    try {
+        const { amount } = req.body;
+
+        const parsedAmount = Number(amount);
+
+        if (amount === undefined || isNaN(parsedAmount) || parsedAmount <= 0) {
+            return res.status(400).json({ message: "Amount must be a valid number greater than 0." });
+        }
+
+        const updatedCustomer = await customerModel.findByIdAndUpdate(
+            req.params.id,
+            { $inc: { balance: parsedAmount } },
+            { new: true }
+        ).select("-password");
+
+        if (!updatedCustomer) return res.status(404).json({ message: "Customer not found" });
+
+        return res.status(200).json({
+            message: "Balance added successfully",
+            data: updatedCustomer,
+        });
+    } catch (error) {
+        console.error("Error adding balance:", error);
+        return res.status(500).json({ message: "Internal server error" });
+    }
+};
+
 export default customerController;

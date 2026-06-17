@@ -8,5 +8,5 @@ router
     .route("/:id")
     .put(customerController.updateCustomer)
     .delete(customerController.deleteCustomer);
-
+router.patch("/:id/balance", customerController.addBalance);
 export default router;

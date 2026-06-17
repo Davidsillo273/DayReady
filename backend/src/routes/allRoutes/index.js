@@ -8,9 +8,8 @@ import cartRoutes from "../cartRoutes.js";
 import ordersRoutes from "../orderRoutes.js";
 
 //auths
-import registerAdminRoutes from "../auth/admins/registerAdminRoutes.js";
+import invitationUserRoutes from "../auth/invitationUserRoutes.js";
 import registerCustomerRoutes from "../auth/customers/registerCustomerRoutes.js";
-import registerEmployeeRoutes from "../auth/employees/registerEmployeeRoutes.js";
 import loginAdminRoutes from "../auth/admins/loginAdminRoutes.js";
 import loginCustomerRoutes from "../auth/customers/loginCustomerRoutes.js";
 import loginEmployeeRoutes from "../auth/employees/loginEmployeeRoutes.js";
@@ -25,9 +24,8 @@ router.use("/products", productsRoutes);
 router.use("/admins", adminRoutes);
 router.use("/employees", employeeRoutes);
 router.use("/customers", customerRoutes);
-router.use("/auth/admins/register", registerAdminRoutes);
+router.use("/auth/users", invitationUserRoutes);
 router.use("/auth/customers/register", registerCustomerRoutes);
-router.use("/auth/employees/register", registerEmployeeRoutes);
 router.use("/auth/admins/login", loginAdminRoutes);
 router.use("/auth/customers/login", loginCustomerRoutes);
 router.use("/auth/employees/login", loginEmployeeRoutes);
