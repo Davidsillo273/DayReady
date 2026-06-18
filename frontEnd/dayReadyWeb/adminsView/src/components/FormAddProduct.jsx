@@ -6,17 +6,17 @@ import Button from "./Button";
 export default function FormAddProduct({ onSubmit, onCancel, initialProduct = null, submitting = false }) {
     const { register, handleSubmit, formState: { errors } } = useForm({
         defaultValues: {
-            name:        initialProduct?.name        || "",
+            name: initialProduct?.name || "",
             description: initialProduct?.description || "",
-            category:    initialProduct?.category    || "",
+            category: initialProduct?.category    || "",
             serviceType: initialProduct?.serviceType || "Presencial",
-            price:       initialProduct?.price       || "",
-            stock:       initialProduct?.stock       || "",
+            price: initialProduct?.price       || "",
+            stock: initialProduct?.stock       || "",
         },
     });
 
     const [imagePreview, setImagePreview] = useState(initialProduct?.image || null);
-    const [imageFile, setImageFile]       = useState(null);
+    const [imageFile, setImageFile] = useState(null);
 
     useEffect(() => {
         if (initialProduct?.image) setImagePreview(initialProduct.image);
@@ -42,18 +42,18 @@ export default function FormAddProduct({ onSubmit, onCancel, initialProduct = nu
     };
 
     const categories = [
-        { value: "",             label: "Seleccionar categoría" },
-        { value: "combos",       label: "Combos"       },
-        { value: "saludable",    label: "Saludable"    },
+        { value: "", label: "Seleccionar categoría" },
+        { value: "combos", label: "Combos" },
+        { value: "saludable", label: "Saludable"    },
         { value: "comida rápida",label: "Comida Rápida"},
-        { value: "bebida",       label: "Bebida"       },
-        { value: "sopa",         label: "Sopa"         },
+        { value: "bebida", label: "Bebida" },
+        { value: "sopa", label: "Sopa"  },
     ];
 
     const serviceTypes = [
         { value: "Presencial", label: "Presencial" },
-        { value: "Delivery",   label: "Delivery"   },
-        { value: "Ambos",      label: "Ambos"      },
+        { value: "Delivery", label: "Delivery"   },
+        { value: "Ambos", label: "Ambos"      },
     ];
 
     const fieldClass = (hasError) =>

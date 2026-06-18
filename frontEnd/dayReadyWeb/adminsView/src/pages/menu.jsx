@@ -1,308 +1,304 @@
-import React, { useState } from 'react';
-import { Search, Bell, ChevronRight, Filter, Plus } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Search, Bell, Filter, Plus } from 'lucide-react';
 import Sidebar from '../Components/Sidebar';
 import ProductTable from '../Components/ProductTable';
 import Modal from '../Components/Modal';
 import ConfirmModal from '../Components/ConfirmModal';
-import FormAddProduct from '../Components/FormAddProduct';
-import Button from '../Components/Button';
+import FormAddMenu from '../Components/FormAddMenu';
+
+const BASE_URL = 'http://localhost:4000/api';
+
+const DAYS = ['all', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 export default function Menu() {
-  const [activeMenu, setActiveMenu] = useState('menu');
+  const [activeMenu, setActiveMenu]  = useState('menu');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLocation, setSelectedLocation] = useState('Local 1');
-  const [selectedCategory, setSelectedCategory] = useState('todos');
-  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedDay, setSelectedDay] = useState('all');
+  const [currentPage, setCurrentPage]  = useState(1);
+
+  const [menus, setMenus]  = useState([]);
+  const [loading, setLoading]  = useState(true);
+  const [error, setError]  = useState(null);
+  const [successMessage, setSuccessMessage] = useState(null);
+  const [submitting, setSubmitting]  = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState(null);
-  const [products, setProducts] = useState([
-    {
-      id: 1,
-      name: 'Combo Clásico Hamburguesa y papas',
-      sku: 'DR-001-C',
-      category: 'combos',
-      price: 12.0,
-      stock: 45,
-      status: 'Activo',
-      image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=100&h=100&fit=crop',
-    },
-    {
-      id: 2,
-      name: 'Ensalada Cesaer',
-      sku: 'DR-042-H',
-      category: 'saludable',
-      price: 8.5,
-      stock: 20,
-      status: 'Activo',
-      image: 'https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=100&h=100&fit=crop',
-    },
-    {
-      id: 3,
-      name: 'Hamburguesa de queso',
-      sku: 'DR-099-F',
-      category: 'comida rápida',
-      price: 7.0,
-      stock: 0,
-      status: 'Inactivo',
-      image: 'https://images.unsplash.com/photo-1550547990-8751c28ccb91?w=100&h=100&fit=crop',
-    },
-  ]);
+  const [selectedMenu, setSelectedMenu] = useState(null);
 
-  // Filtrar productos
-  const filteredProducts =
-    selectedCategory === 'todos'
-      ? products
-      : products.filter((p) => p.category === selectedCategory);
-
-  // Datos de categorías
-  const categories = [
-    { id: 'todos', label: 'Todos los menús' },
-    { id: 'combos', label: 'Combos' },
-    { id: 'saludable', label: 'Saludable' },
-    { id: 'comida rápida', label: 'Comida Rápida' },
-  ];
-
-  // Paginación
-  const itemsPerPage = 3;
-  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
-  const startIdx = (currentPage - 1) * itemsPerPage;
-  const paginatedProducts = filteredProducts.slice(startIdx, startIdx + itemsPerPage);
-
-  const handleEditProduct = (product) => {
-    setSelectedProduct(product);
-    setIsEditModalOpen(true);
+  const showSuccess = (msg) => {
+    setSuccessMessage(msg);
+    setTimeout(() => setSuccessMessage(null), 3000);
   };
 
-  const handleDeleteProduct = (productId) => {
-    setSelectedProduct(productId);
-    setIsDeleteConfirmOpen(true);
-  };
+  const mapMenu = (m) => ({
+    id: m._id,
+    name: m.name,
+    description: m.description,
+    category: m.dayOfWeek,
+    price: m.price,
+    stock: m.stock,
+    status: m.stock > 0 ? 'Activo' : 'Inactivo',
+    image: m.image || 'https://via.placeholder.com/100',
+    dayOfWeek: m.dayOfWeek,
+    productId: m.productId,
+  });
 
-  const handleConfirmDelete = () => {
-    setProducts(products.filter((p) => p.id !== selectedProduct));
-    setIsDeleteConfirmOpen(false);
-    setSelectedProduct(null);
-  };
-
-  const handleCancelDelete = () => {
-    setIsDeleteConfirmOpen(false);
-    setSelectedProduct(null);
-  };
-
-  const handleUpdateProduct = (formData) => {
-    const updatedProducts = products.map((p) =>
-      p.id === selectedProduct.id
-        ? {
-            ...p,
-            name: formData.name,
-            category: formData.category,
-            description: formData.description,
-            price: parseFloat(formData.price),
-            stock: parseInt(formData.stock),
-            image: formData.image ? URL.createObjectURL(formData.image) : p.image,
-          }
-        : p
-    );
-    setProducts(updatedProducts);
-    setIsEditModalOpen(false);
-    setSelectedProduct(null);
-  };
-
-  const handleAddProduct = (formData) => {
-    const newProduct = {
-      id: products.length + 1,
-      name: formData.name,
-      sku: `DR-${String(products.length + 1).padStart(3, '0')}-${formData.category.charAt(0).toUpperCase()}`,
-      category: formData.category,
-      price: parseFloat(formData.price),
-      stock: parseInt(formData.stock),
-      status: 'Activo',
-      image: formData.image ? URL.createObjectURL(formData.image) : 'https://via.placeholder.com/100',
+  //cargar menús
+  useEffect(() => {
+    const fetchMenus = async () => {
+      try {
+        setLoading(true);
+        const res = await fetch(`${BASE_URL}/menu`, { credentials: 'include' });
+        if (!res.ok) throw new Error('Error al cargar menús');
+        const data = await res.json();
+        setMenus(data.map(mapMenu));
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
     };
-    setProducts([...products, newProduct]);
-    setIsModalOpen(false);
+    fetchMenus();
+  }, []);
+
+  const reload = async () => {
+    const res = await fetch(`${BASE_URL}/menu`, { credentials: 'include' });
+    if (!res.ok) throw new Error('Error al cargar menús');
+    const data = await res.json();
+    setMenus(data.map(mapMenu));
   };
 
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
+  //crear menú
+  const handleAddMenu = async (formData) => {
+    try {
+      setSubmitting(true);
+      setError(null);
+      const res = await fetch(`${BASE_URL}/menu`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          name: formData.name,
+          description: formData.description,
+          price: parseFloat(formData.price),
+          stock: parseInt(formData.stock),
+          dayOfWeek:formData.dayOfWeek,
+          productId:formData.productId,
+          image:formData.image,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.message || 'Error al agregar menús');
+      await reload();
+      setIsModalOpen(false);
+      showSuccess('Menú agregado exitosamente');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSubmitting(false);
+    }
   };
+
+  //actualizar menú
+  const handleUpdateMenu = async (formData) => {
+    if (!selectedMenu) return;
+    try {
+      setSubmitting(true);
+      setError(null);
+      const res = await fetch(`${BASE_URL}/menu/${selectedMenu.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          name: formData.name,
+          description: formData.description,
+          price: parseFloat(formData.price),
+          stock:  parseInt(formData.stock),
+          dayOfWeek:formData.dayOfWeek,
+          productId: formData.productId,
+          image: formData.image,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.message || 'Error al actualizar menús');
+      await reload();
+      setIsEditModalOpen(false);
+      setSelectedMenu(null);
+      showSuccess('Menú actualizado exitosamente');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  //eliminar menú
+  const handleConfirmDelete = async () => {
+    if (!selectedMenu) return;
+    try {
+      setSubmitting(true);
+      setError(null);
+      const res = await fetch(`${BASE_URL}/menu/${selectedMenu}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.message || 'Error al elimar menú');
+      setMenus((prev) => prev.filter((m) => m.id !== selectedMenu));
+      setIsDeleteConfirmOpen(false);
+      setSelectedMenu(null);
+      showSuccess('Menú eliminado');
+    } catch (err) {
+      setError(err.message);
+      setIsDeleteConfirmOpen(false);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const filteredMenus = menus.filter((m) => {
+    const matchDay = selectedDay === 'all' || m.dayOfWeek === selectedDay;
+    const q = searchQuery.trim().toLowerCase();
+    const matchSearch = !q || m.name.toLowerCase().includes(q);
+    return matchDay && matchSearch;
+  });
+
+  const itemsPerPage = 3;
+  const totalPages = Math.max(1, Math.ceil(filteredMenus.length / itemsPerPage));
+  const startIdx= (currentPage - 1) * itemsPerPage;
+  const paginated = filteredMenus.slice(startIdx, startIdx + itemsPerPage);
 
   return (
     <div className="flex h-screen bg-gray-50">
       <Sidebar activeMenu={activeMenu} setActiveMenu={setActiveMenu} />
 
       <main className="flex-1 overflow-auto">
-        {/* BARRA SUPERIOR */}
         <header className="bg-white shadow-sm sticky top-0 z-40">
           <div className="px-8 py-4 flex items-center justify-between">
             <div className="flex items-center space-x-6 flex-1">
-              <select
-                value={selectedLocation}
-                onChange={(e) => setSelectedLocation(e.target.value)}
-                className="px-4 py-2 bg-gray-100 rounded-lg text-gray-700 font-medium focus:outline-none border border-gray-200 text-sm"
-              >
-                <option value="Local 1">Local 1</option>
-                <option value="Local 2">Local 2</option>
-                <option value="Local 3">Local 3</option>
+              <select value={selectedLocation} onChange={(e) => setSelectedLocation(e.target.value)}
+                      className="px-4 py-2 bg-gray-100 rounded-lg text-gray-700 font-medium focus:outline-none border border-gray-200 text-sm">
+                <option>Local 1</option>
+                <option>Local 2</option>
+                <option>Local 3</option>
               </select>
-
               <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input
-                  type="text"
-                  placeholder="Buscar menú..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 bg-gray-100 rounded-lg text-gray-700 placeholder-gray-500 focus:outline-none border border-gray-200 focus:border-orange-400 text-sm"
-                />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input type="text" placeholder="Search menu..."
+                       value={searchQuery}
+                       onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+                       className="w-full pl-10 pr-4 py-2 bg-gray-100 rounded-lg text-gray-700 placeholder-gray-500 focus:outline-none border border-gray-200 focus:border-orange-400 text-sm" />
               </div>
             </div>
-
             <div className="flex items-center space-x-4">
-              <button className="relative p-2 text-gray-600 hover:bg-gray-100 rounded-full transition-all">
+              <button className="relative p-2 text-gray-600 hover:bg-gray-100 rounded-full">
                 <Bell className="w-6 h-6" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
               </button>
-
-              <div className="w-10 h-10 bg-orange-200 rounded-full flex items-center justify-center text-orange-600 font-bold text-lg">
-                DE
-              </div>
+              <div className="w-10 h-10 bg-orange-200 rounded-full flex items-center justify-center text-orange-600 font-bold text-lg">DE</div>
             </div>
           </div>
         </header>
 
-        {/* CONTENIDO */}
         <div className="p-8">
           <div className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-900">Gestión de Menú del Día</h1>
-            <p className="text-gray-600 text-sm mt-1">Administra los platillos disponibles en el menú del día</p>
+            <h1 className="text-3xl font-bold text-gray-900">Gestión del menú del Día</h1>
+            <p className="text-gray-600 text-sm mt-1">Administra los platillos del menú del día</p>
           </div>
 
-          {/* Controles */}
+          {error && (
+            <div className="mb-4 px-4 py-3 rounded-lg bg-red-50 text-red-700 text-sm border border-red-200">{error}</div>
+          )}
+          {successMessage && (
+            <div className="mb-4 px-4 py-3 rounded-lg bg-green-50 text-green-700 text-sm border border-green-200">{successMessage}</div>
+          )}
+
           <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
             <div className="flex items-center justify-between mb-6">
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-semibold transition-all flex items-center space-x-2 text-sm"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Agregar Menú</span>
+              <button onClick={() => { setSelectedMenu(null); setIsModalOpen(true); }}
+                      className="px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-semibold flex items-center space-x-2 text-sm transition-all">
+                <Plus className="w-4 h-4" /><span>Agregar Menú</span>
               </button>
-
-              <div className="flex items-center space-x-2">
-                <button className="px-3 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-all flex items-center space-x-2 text-sm">
-                  <Filter className="w-4 h-4" />
-                  <span>mas filtros</span>
-                </button>
-              </div>
+              <button className="px-3 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 flex items-center space-x-2 text-sm">
+                <Filter className="w-4 h-4" /><span>Más flitros</span>
+              </button>
             </div>
-
             <div className="flex flex-wrap gap-2">
-              {categories.map((cat) => (
-                <button
-                  key={cat.id}
-                  onClick={() => {
-                    setSelectedCategory(cat.id);
-                    setCurrentPage(1);
-                  }}
-                  className={`px-4 py-2 rounded-lg font-medium transition-all text-sm ${
-                    selectedCategory === cat.id
-                      ? 'bg-orange-500 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  {cat.label}
+              {DAYS.map((day) => (
+                <button key={day} onClick={() => { setSelectedDay(day); setCurrentPage(1); }}
+                        className={`px-4 py-2 rounded-lg font-medium transition-all text-sm ${
+                          selectedDay === day ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}>
+                  {day === 'all' ? 'All menus' : day}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Tabla de productos */}
           <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-            <ProductTable
-              products={paginatedProducts}
-              onEdit={handleEditProduct}
-              onDelete={handleDeleteProduct}
-            />
-
-            <div className="flex items-center justify-between mt-6 pt-6 border-t border-gray-200">
-              <p className="text-gray-600 text-sm">
-                mostrando {startIdx + 1} a {Math.min(startIdx + itemsPerPage, filteredProducts.length)} de{' '}
-                {filteredProducts.length} menús
-              </p>
-
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-                  disabled={currentPage === 1}
-                  className="px-3 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm"
-                >
-                  Anterior
-                </button>
-
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                  <button
-                    key={page}
-                    onClick={() => setCurrentPage(page)}
-                    className={`w-8 h-8 rounded-lg font-medium transition-all text-sm ${
-                      currentPage === page
-                        ? 'bg-orange-500 text-white'
-                        : 'border border-gray-300 text-gray-700 hover:bg-gray-100'
-                    }`}
-                  >
-                    {page}
-                  </button>
-                ))}
-
-                <button
-                  onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-                  disabled={currentPage === totalPages}
-                  className="px-3 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm"
-                >
-                  Siguiente
-                </button>
+            {loading ? (
+              <div className="flex items-center justify-center py-16 text-gray-500">Cargando menús...</div>
+            ) : menus.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 text-gray-400">
+                <p className="text-lg font-medium">No hay menús agregados</p>
+                <p className="text-sm mt-1">Haz click en Nuevo menú </p>
               </div>
-            </div>
+            ) : (
+              <>
+                <ProductTable
+                  products={paginated}
+                  onEdit={(menu) => { setSelectedMenu(menu); setIsEditModalOpen(true); }}
+                  onDelete={(id) => { setSelectedMenu(id); setIsDeleteConfirmOpen(true); }}
+                />
+                <div className="flex items-center justify-between mt-6 pt-6 border-t border-gray-200">
+                  <p className="text-gray-600 text-sm">
+                    {filteredMenus.length === 0
+                      ? 'No results'
+                      : `showing ${startIdx + 1} to ${Math.min(startIdx + itemsPerPage, filteredMenus.length)} of ${filteredMenus.length} menus`}
+                  </p>
+                  <div className="flex items-center space-x-2">
+                    <button onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))} disabled={currentPage === 1}
+                            className="px-3 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 disabled:opacity-50 text-sm">
+                      Previous
+                    </button>
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                      <button key={page} onClick={() => setCurrentPage(page)}
+                              className={`w-8 h-8 rounded-lg font-medium text-sm ${
+                                currentPage === page ? 'bg-orange-500 text-white' : 'border border-gray-300 text-gray-700 hover:bg-gray-100'
+                              }`}>
+                        {page}
+                      </button>
+                    ))}
+                    <button onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages}
+                            className="px-3 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 disabled:opacity-50 text-sm">
+                      Next
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </main>
 
-      {/* MODAL AGREGAR MENÚ */}
-      <Modal
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        title="Agregar Menú del Día"
-        description="Completa los detalles del platillo para agregarlo al menú de hoy."
-      >
-        <FormAddProduct onSubmit={handleAddProduct} onCancel={handleCloseModal} />
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}
+             title="Add Daily Menu" description="Complete the dish details to add it to today's menu.">
+        <FormAddMenu onSubmit={handleAddMenu} onCancel={() => setIsModalOpen(false)} submitting={submitting} />
       </Modal>
 
-      {/* MODAL EDITAR MENÚ */}
-      <Modal
-        isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
-        title="Editar Menú"
-        description="Actualiza los detalles del platillo."
-      >
-        <FormAddProduct
-          initialProduct={selectedProduct}
-          onSubmit={handleUpdateProduct}
-          onCancel={() => setIsEditModalOpen(false)}
-        />
+      <Modal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)}
+             title="Edit Menu" description="Update the dish details.">
+        <FormAddMenu initialMenu={selectedMenu} onSubmit={handleUpdateMenu}
+                     onCancel={() => setIsEditModalOpen(false)} submitting={submitting} />
       </Modal>
 
-      {/* MODAL CONFIRMAR ELIMINACIÓN */}
-      <ConfirmModal
-        isOpen={isDeleteConfirmOpen}
-        onConfirm={handleConfirmDelete}
-        onCancel={handleCancelDelete}
-        title="Eliminar Menú"
-        message="¿Estás seguro de que deseas eliminar este platillo del menú? Esta acción no se puede deshacer."
-        confirmText="Eliminar"
-        isDangerous={true}
-      />
+      <ConfirmModal isOpen={isDeleteConfirmOpen} onConfirm={handleConfirmDelete}
+                    onCancel={() => { setIsDeleteConfirmOpen(false); setSelectedMenu(null); }}
+                    title="Delete Menu"
+                    message="Are you sure you want to delete this menu item? This action cannot be undone."
+                    confirmText="Delete" isDangerous={true} />
     </div>
   );
 }

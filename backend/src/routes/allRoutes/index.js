@@ -6,6 +6,7 @@ import employeeRoutes from "../employeeRoutes.js";
 import customerRoutes from "../customerRoutes.js";
 import cartRoutes from "../cartRoutes.js";
 import ordersRoutes from "../orderRoutes.js";
+import dayliMenuRoutes from "../dailyMenuRoutes.js"
 
 //auths
 import invitationUserRoutes from "../auth/invitationUserRoutes.js";
@@ -33,4 +34,5 @@ router.use("/auth/recovery", recoveryPasswordRoutes);
 router.use("/auth/logout", logoutRoutes);
 router.use("/cart", cartRoutes);
 router.use("/orders", ordersRoutes);
+router.use("/menu", dayliMenuRoutes)
 export default router;
