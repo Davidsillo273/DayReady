@@ -7,18 +7,18 @@ const BASE_URL = 'http://localhost:4000/api';
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 export default function FormAddMenu({ onSubmit, onCancel, initialMenu = null, submitting = false }) {
-  const [products, setProducts]                 = useState([]);
-  const [loadingProducts, setLoadingProducts]   = useState(true);
-  const [selectedProduct, setSelectedProduct]   = useState(null);
+  const [products, setProducts] = useState([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+  const [selectedProduct, setSelectedProduct] = useState(null);
 
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm({
     defaultValues: {
-      productId:initialMenu?.productId   || '',
-      name: initialMenu?.name        || '',
+      productId:initialMenu?.productId || '',
+      name: initialMenu?.name || '',
       description: initialMenu?.description || '',
-      price: initialMenu?.price       || '',
-      stock: initialMenu?.stock       || '',
-      dayOfWeek: initialMenu?.dayOfWeek   || '',
+      price: initialMenu?.price  || '',
+      stock: initialMenu?.stock  || '',
+      dayOfWeek: initialMenu?.dayOfWeek || '',
     },
   });
 

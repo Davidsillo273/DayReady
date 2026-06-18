@@ -284,21 +284,21 @@ export default function Menu() {
       </main>
 
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}
-             title="Add Daily Menu" description="Complete the dish details to add it to today's menu.">
+             title="Añadir menú diario" description="Rellena los datos del plato para añadirlo al menú de hoy">
         <FormAddMenu onSubmit={handleAddMenu} onCancel={() => setIsModalOpen(false)} submitting={submitting} />
       </Modal>
 
       <Modal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)}
-             title="Edit Menu" description="Update the dish details.">
+             title="Editar Meú" description="Actualizar los detalles del plato.">
         <FormAddMenu initialMenu={selectedMenu} onSubmit={handleUpdateMenu}
                      onCancel={() => setIsEditModalOpen(false)} submitting={submitting} />
       </Modal>
 
       <ConfirmModal isOpen={isDeleteConfirmOpen} onConfirm={handleConfirmDelete}
                     onCancel={() => { setIsDeleteConfirmOpen(false); setSelectedMenu(null); }}
-                    title="Delete Menu"
-                    message="Are you sure you want to delete this menu item? This action cannot be undone."
-                    confirmText="Delete" isDangerous={true} />
+                    title="Eliminar Menú"
+                    message="A¿Estás seguro de que quieres eliminar este elemento del menú? Esta acción no se puede deshacer."
+                    confirmText="Eliminar" isDangerous={true} />
     </div>
   );
 }
