@@ -28,8 +28,8 @@ export default function Sidebar({ activeMenu, setActiveMenu }) {
     { id: 'pedidos', label: 'Gestión de Pedidos', icon: ShoppingCart, path: '/admin/orders' },
     { id: 'ventas', label: 'Ventas', icon: BarChart3, path: '/admin/sales' },
     { id: 'clientes', label: 'Clientes', icon: Users, path: '/admin/customers' },
-    { id: 'invitarAdmin', label: 'Invitar Administrador', icon: UserCog, path: '/admin/inviteAdmin' },
-    { id: 'invitarEmpleado', label: 'Invitar Empleado', icon: UserPlus, path: '/admin/inviteEmployee' },
+    { id: 'gestionar-equipo', label: 'Gestionar Equipo', icon: UserCog, path: '/admin/manage-staff' },
+    { id: 'invitar-usuario', label: 'Invitar Usuario', icon: UserPlus, path: '/admin/invite-staff' },
   ];
 
   const handleMenuClick = (item) => {
@@ -73,11 +73,10 @@ export default function Sidebar({ activeMenu, setActiveMenu }) {
             <button
               key={item.id}
               onClick={() => handleMenuClick(item)}
-              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all ${
-                isActive
+              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all ${isActive
                   ? 'bg-orange-100 text-orange-600 border-l-4 border-orange-600'
                   : 'text-gray-700 hover:bg-gray-100'
-              }`}
+                }`}
             >
               <IconComponent className="w-5 h-5" />
               <span className="font-medium text-sm">{item.label}</span>

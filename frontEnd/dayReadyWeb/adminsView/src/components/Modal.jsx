@@ -5,7 +5,6 @@ export default function Modal({ isOpen, onClose, title, description, children })
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50">
-      {/* Sin fondo oscuro, solo un backdrop transparente */}
       <div className="bg-white rounded-lg shadow-2xl max-w-3xl w-full mx-4 max-h-screen overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
