@@ -8,20 +8,31 @@ import FormAddMenu from '../Components/FormAddMenu';
 
 const BASE_URL = 'http://localhost:4000/api';
 
-const DAYS = ['all', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+// El valor (value) es lo que se guarda/filtra en inglés.
+// La etiqueta (label) es lo que se muestra al usuario en español.
+const DAYS = [
+  { value: 'all', label: 'Todos los menús' },
+  { value: 'Monday', label: 'Lunes' },
+  { value: 'Tuesday', label: 'Martes' },
+  { value: 'Wednesday', label: 'Miércoles' },
+  { value: 'Thursday', label: 'Jueves' },
+  { value: 'Friday', label: 'Viernes' },
+  { value: 'Saturday', label: 'Sábado' },
+  { value: 'Sunday', label: 'Domingo' },
+];
 
 export default function Menu() {
-  const [activeMenu, setActiveMenu]  = useState('menu');
+  const [activeMenu, setActiveMenu] = useState('menu');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLocation, setSelectedLocation] = useState('Local 1');
   const [selectedDay, setSelectedDay] = useState('all');
-  const [currentPage, setCurrentPage]  = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
 
-  const [menus, setMenus]  = useState([]);
-  const [loading, setLoading]  = useState(true);
-  const [error, setError]  = useState(null);
+  const [menus, setMenus] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
-  const [submitting, setSubmitting]  = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
@@ -84,9 +95,9 @@ export default function Menu() {
           description: formData.description,
           price: parseFloat(formData.price),
           stock: parseInt(formData.stock),
-          dayOfWeek:formData.dayOfWeek,
-          productId:formData.productId,
-          image:formData.image,
+          dayOfWeek: formData.dayOfWeek,
+          productId: formData.productId,
+          image: formData.image,
         }),
       });
       const json = await res.json();
@@ -115,8 +126,8 @@ export default function Menu() {
           name: formData.name,
           description: formData.description,
           price: parseFloat(formData.price),
-          stock:  parseInt(formData.stock),
-          dayOfWeek:formData.dayOfWeek,
+          stock: parseInt(formData.stock),
+          dayOfWeek: formData.dayOfWeek,
           productId: formData.productId,
           image: formData.image,
         }),
@@ -167,7 +178,7 @@ export default function Menu() {
 
   const itemsPerPage = 3;
   const totalPages = Math.max(1, Math.ceil(filteredMenus.length / itemsPerPage));
-  const startIdx= (currentPage - 1) * itemsPerPage;
+  const startIdx = (currentPage - 1) * itemsPerPage;
   const paginated = filteredMenus.slice(startIdx, startIdx + itemsPerPage);
 
   return (
@@ -186,7 +197,7 @@ export default function Menu() {
               </select>
               <div className="relative flex-1 max-w-md">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input type="text" placeholder="Search menu..."
+                <input type="text" placeholder="Buscar menú..."
                        value={searchQuery}
                        onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
                        className="w-full pl-10 pr-4 py-2 bg-gray-100 rounded-lg text-gray-700 placeholder-gray-500 focus:outline-none border border-gray-200 focus:border-orange-400 text-sm" />
@@ -222,16 +233,16 @@ export default function Menu() {
                 <Plus className="w-4 h-4" /><span>Agregar Menú</span>
               </button>
               <button className="px-3 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 flex items-center space-x-2 text-sm">
-                <Filter className="w-4 h-4" /><span>Más flitros</span>
+                <Filter className="w-4 h-4" /><span>Más filtros</span>
               </button>
             </div>
             <div className="flex flex-wrap gap-2">
               {DAYS.map((day) => (
-                <button key={day} onClick={() => { setSelectedDay(day); setCurrentPage(1); }}
+                <button key={day.value} onClick={() => { setSelectedDay(day.value); setCurrentPage(1); }}
                         className={`px-4 py-2 rounded-lg font-medium transition-all text-sm ${
-                          selectedDay === day ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          selectedDay === day.value ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                         }`}>
-                  {day === 'all' ? 'All menus' : day}
+                  {day.label}
                 </button>
               ))}
             </div>
@@ -243,7 +254,7 @@ export default function Menu() {
             ) : menus.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-gray-400">
                 <p className="text-lg font-medium">No hay menús agregados</p>
-                <p className="text-sm mt-1">Haz click en Nuevo menú </p>
+                <p className="text-sm mt-1">Haz click en Agregar Menú</p>
               </div>
             ) : (
               <>
@@ -255,13 +266,13 @@ export default function Menu() {
                 <div className="flex items-center justify-between mt-6 pt-6 border-t border-gray-200">
                   <p className="text-gray-600 text-sm">
                     {filteredMenus.length === 0
-                      ? 'No results'
-                      : `showing ${startIdx + 1} to ${Math.min(startIdx + itemsPerPage, filteredMenus.length)} of ${filteredMenus.length} menus`}
+                      ? 'Sin resultados'
+                      : `Mostrando ${startIdx + 1} a ${Math.min(startIdx + itemsPerPage, filteredMenus.length)} de ${filteredMenus.length} menús`}
                   </p>
                   <div className="flex items-center space-x-2">
                     <button onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))} disabled={currentPage === 1}
                             className="px-3 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 disabled:opacity-50 text-sm">
-                      Previous
+                      Anterior
                     </button>
                     {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                       <button key={page} onClick={() => setCurrentPage(page)}
@@ -273,7 +284,7 @@ export default function Menu() {
                     ))}
                     <button onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages}
                             className="px-3 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 disabled:opacity-50 text-sm">
-                      Next
+                      Siguiente
                     </button>
                   </div>
                 </div>
@@ -289,7 +300,7 @@ export default function Menu() {
       </Modal>
 
       <Modal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)}
-             title="Editar Meú" description="Actualizar los detalles del plato.">
+             title="Editar Menú" description="Actualizar los detalles del plato.">
         <FormAddMenu initialMenu={selectedMenu} onSubmit={handleUpdateMenu}
                      onCancel={() => setIsEditModalOpen(false)} submitting={submitting} />
       </Modal>
@@ -297,7 +308,7 @@ export default function Menu() {
       <ConfirmModal isOpen={isDeleteConfirmOpen} onConfirm={handleConfirmDelete}
                     onCancel={() => { setIsDeleteConfirmOpen(false); setSelectedMenu(null); }}
                     title="Eliminar Menú"
-                    message="A¿Estás seguro de que quieres eliminar este elemento del menú? Esta acción no se puede deshacer."
+                    message="¿Estás seguro de que quieres eliminar este elemento del menú? Esta acción no se puede deshacer."
                     confirmText="Eliminar" isDangerous={true} />
     </div>
   );
