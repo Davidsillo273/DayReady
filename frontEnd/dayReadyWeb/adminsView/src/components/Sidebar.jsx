@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Home,
@@ -10,11 +10,16 @@ import {
   LogOut,
   Menu as MenuIcon,
   BarChart3,
+  UserPlus,
+  UserCog,
 } from 'lucide-react';
 import dayReadyLogo from '../imgs/DayReadyLogo.png';
 
+const BASE_URL = 'http://localhost:4000/api';
+
 export default function Sidebar({ activeMenu, setActiveMenu }) {
   const navigate = useNavigate();
+  const [loggingOut, setLoggingOut] = useState(false);
 
   const menuItems = [
     { id: 'inicio', label: 'Inicio', icon: Home, path: '/admin/dashboard' },
@@ -23,6 +28,8 @@ export default function Sidebar({ activeMenu, setActiveMenu }) {
     { id: 'pedidos', label: 'Gestión de Pedidos', icon: ShoppingCart, path: '/admin/orders' },
     { id: 'ventas', label: 'Ventas', icon: BarChart3, path: '/admin/sales' },
     { id: 'clientes', label: 'Clientes', icon: Users, path: '/admin/customers' },
+    { id: 'gestionar-equipo', label: 'Gestionar Equipo', icon: UserCog, path: '/admin/manage-staff' },
+    { id: 'invitar-usuario', label: 'Invitar Usuario', icon: UserPlus, path: '/admin/invite-staff' },
   ];
 
   const handleMenuClick = (item) => {
@@ -30,8 +37,19 @@ export default function Sidebar({ activeMenu, setActiveMenu }) {
     navigate(item.path);
   };
 
-  const handleLogout = () => {
-    navigate('/admin');
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    try {
+      await fetch(`${BASE_URL}/auth/logout`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
+    } finally {
+      setLoggingOut(false);
+      navigate('/admin');
+    }
   };
 
   return (
@@ -55,11 +73,10 @@ export default function Sidebar({ activeMenu, setActiveMenu }) {
             <button
               key={item.id}
               onClick={() => handleMenuClick(item)}
-              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all ${
-                isActive
+              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all ${isActive
                   ? 'bg-orange-100 text-orange-600 border-l-4 border-orange-600'
                   : 'text-gray-700 hover:bg-gray-100'
-              }`}
+                }`}
             >
               <IconComponent className="w-5 h-5" />
               <span className="font-medium text-sm">{item.label}</span>
@@ -72,10 +89,11 @@ export default function Sidebar({ activeMenu, setActiveMenu }) {
       <div className="p-4 border-t border-gray-200">
         <button
           onClick={handleLogout}
-          className="w-full flex items-center space-x-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg transition-all font-medium"
+          disabled={loggingOut}
+          className="w-full flex items-center space-x-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg transition-all font-medium disabled:opacity-50"
         >
           <LogOut className="w-5 h-5" />
-          <span className="text-sm">Cerrar Sesión</span>
+          <span className="text-sm">{loggingOut ? 'Cerrando sesión...' : 'Cerrar Sesión'}</span>
         </button>
       </div>
     </aside>

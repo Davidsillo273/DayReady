@@ -9,51 +9,51 @@ import FormAddProduct from '../Components/FormAddProduct';
 const BASE_URL = 'http://localhost:4000/api';
 
 const CATEGORIES = [
-  { id: 'todos',         label: 'Todos los productos' },
-  { id: 'combos',        label: 'Combos'        },
-  { id: 'saludable',     label: 'Saludable'     },
+  { id: 'todos', label: 'Todos los productos' },
+  { id: 'combos', label: 'Combos' },
+  { id: 'saludable',  label: 'Saludable' },
   { id: 'comida rápida', label: 'Comida Rápida' },
-  { id: 'bebida',        label: 'Bebida'        },
-  { id: 'sopa',          label: 'Sopa'          },
+  { id: 'bebida',  label: 'Bebida' },
+  { id: 'sopa', label: 'Sopa' },
 ];
 
 const SERVICE_TYPES = [
-  { id: 'todos',      label: 'Todos'       },
-  { id: 'Presencial', label: 'Presencial'  },
-  { id: 'Delivery',   label: 'Delivery'    },
-  { id: 'Ambos',      label: 'Ambos'       },
+  { id: 'todos',label: 'Todos'},
+  { id: 'Presencial', label: 'Presencial'},
+  { id: 'Delivery',label: 'Delivery'},
+  { id: 'Ambos',label: 'Ambos' },
 ];
 
 const STOCK_OPTIONS = [
-  { id: 'todos',    label: 'Todos'     },
+  { id: 'todos', label: 'Todos'     },
   { id: 'activo',   label: 'Activo'    },
   { id: 'inactivo', label: 'Inactivo'  },
 ];
 
 export default function Products() {
-  const [activeMenu, setActiveMenu]             = useState('productos');
-  const [searchQuery, setSearchQuery]           = useState('');
+  const [activeMenu, setActiveMenu]  = useState('productos');
+  const [searchQuery, setSearchQuery]  = useState('');
   const [selectedLocation, setSelectedLocation] = useState('Local 1');
   const [selectedCategory, setSelectedCategory] = useState('todos');
-  const [currentPage, setCurrentPage]           = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Filtros extra
   const [showExtraFilters, setShowExtraFilters] = useState(false);
   const [selectedServiceType, setSelectedServiceType] = useState('todos');
-  const [selectedStock, setSelectedStock]             = useState('todos');
+  const [selectedStock, setSelectedStock]  = useState('todos');
 
   // Datos
-  const [products, setProducts]             = useState([]);
-  const [loading, setLoading]               = useState(true);
-  const [error, setError]                   = useState(null);
+  const [products, setProducts]  = useState([]);
+  const [loading, setLoading]  = useState(true);
+  const [error, setError]  = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
-  const [submitting, setSubmitting]         = useState(false);
+  const [submitting, setSubmitting]= useState(false);
 
   // Modales
-  const [isModalOpen, setIsModalOpen]                   = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen]           = useState(false);
+  const [isModalOpen, setIsModalOpen]  = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen]  = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen]   = useState(false);
-  const [selectedProduct, setSelectedProduct]           = useState(null);
+  const [selectedProduct, setSelectedProduct]  = useState(null);
 
   const showSuccess = (msg) => {
     setSuccessMessage(msg);
@@ -128,12 +128,12 @@ export default function Products() {
       setSubmitting(true);
       setError(null);
       const data = new FormData();
-      if (formData.name)        data.append('name', formData.name);
+      if (formData.name)  data.append('name', formData.name);
       if (formData.description) data.append('description', formData.description);
-      if (formData.category)    data.append('category', formData.category);
+      if (formData.category)data.append('category', formData.category);
       if (formData.serviceType) data.append('type', formData.serviceType);
-      if (formData.price)       data.append('price', formData.price);
-      if (formData.stock)       data.append('quantity', formData.stock);
+      if (formData.price) data.append('price', formData.price);
+      if (formData.stock) data.append('quantity', formData.stock);
       if (formData.image instanceof File) data.append('image', formData.image);
       const res = await fetch(`${BASE_URL}/products/${selectedProduct.id}`, { method: 'PUT', credentials: 'include', body: data });
       const json = await res.json();

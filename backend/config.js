@@ -23,5 +23,6 @@ export const config = {
         client_id: process.env.CLIENT_ID,
         client_secret: process.env.CLIENT_SECRET,
         audience: process.env.AUDIENCE
-    }
+    },
+    frontendUrl: process.env.FRONTEND_URL || "http://localhost:5173"
 }
