@@ -1,21 +1,23 @@
 import React, { useState } from 'react';
 import { useCart } from '../context/CartContext';
-import * as cartService from '../services/cartService';
 
 export default function ProductModal({ isOpen, onClose, product }) {
   const [quantity, setQuantity] = useState(1);
   const [extras, setExtras] = useState({ papas: false, soda: false });
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
-  const { addToCart, cartId, setCartId, customerId, items } = useCart();
+  const { addToCart, customerId } = useCart();
 
   if (!isOpen || !product) return null;
 
-  // Calculamos el total dinámico basado en la cantidad y los extras
+  // Los extras son sólo informativos: el backend todavía no tiene forma
+  // de guardar acompañamientos en el carrito, así que se muestran en el
+  // total de esta pantalla pero no se envían al agregar el producto.
   const extrasTotal = (extras.papas ? 1.50 : 0) + (extras.soda ? 1.00 : 0);
   const total = ((product.price + extrasTotal) * quantity).toFixed(2);
 
-  // Manejar agregar al carrito
+  // Manejar agregar al carrito (CartContext ya se encarga de crear o
+  // actualizar el carrito real en el backend)
   const handleAddToCart = async () => {
     if (!customerId) {
       alert('Por favor, inicia sesión primero');
@@ -24,21 +26,7 @@ export default function ProductModal({ isOpen, onClose, product }) {
 
     try {
       setLoading(true);
-
-      // Agregar al estado local del carrito
-      await addToCart(product.id, quantity, extras);
-
-      // Si no hay carrito, crear uno
-      if (!cartId) {
-        const newCart = await cartService.createCart(customerId, [
-          { productoId: product.id, cantidad: quantity }
-        ]);
-        setCartId(newCart._id);
-      } else {
-        // Si ya existe carrito, actualizarlo
-        const updatedItems = [...items, { productoId: product.id, cantidad: quantity }];
-        await cartService.updateCart(cartId, updatedItems);
-      }
+      await addToCart(product, quantity);
 
       setSuccessMessage('¡Producto agregado al carrito!');
       setTimeout(() => {
@@ -68,10 +56,13 @@ export default function ProductModal({ isOpen, onClose, product }) {
             </svg>
           </button>
           <div className="h-48 bg-gray-200 w-full relative">
-             {/* Aquí irá tu imagen: <img src={product.image} className="w-full h-full object-cover" /> */}
-             <div className="absolute inset-0 flex items-center justify-center text-gray-400 italic">
-               Imagen del producto ({product.title})
-             </div>
+            {product.image ? (
+              <img src={product.image} alt={product.title} className="w-full h-full object-cover" />
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center text-gray-400 italic">
+                Imagen del producto ({product.title})
+              </div>
+            )}
           </div>
         </div>
 

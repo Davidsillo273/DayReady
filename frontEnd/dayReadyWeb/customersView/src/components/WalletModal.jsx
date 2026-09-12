@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function WalletModal({ isOpen, onClose }) {
+export default function WalletModal({ isOpen, onClose, customer }) {
   if (!isOpen) return null;
 
   return (
@@ -17,7 +17,7 @@ export default function WalletModal({ isOpen, onClose }) {
         <div className="bg-[#F0FDF4] border border-[#DCFCE7] rounded-[24px] p-6 text-emerald-900 mb-8 relative overflow-hidden">
             <div className="relative z-10">
                 <p className="text-emerald-700/80 text-xs font-semibold uppercase tracking-wider mb-1">Tu Saldo Disponible</p>
-                <h3 className="text-4xl font-black text-emerald-950">$15.50</h3>
+                <h3 className="text-4xl font-black text-emerald-950">${Number(customer?.balance || 0).toFixed(2)}</h3>
             </div>
             <svg className="absolute -right-4 -bottom-4 w-32 h-32 text-emerald-100/50" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.82v-1.91c-1.57-.33-3.13-1.12-3.66-2.09l1.66-1.11c.36.63 1.15 1.12 2 1.34v-3.41c-1.63-.44-3.52-1.07-3.52-3.14 0-1.79 1.4-3 3.11-3.37V5h2.82v1.9c1.47.28 2.72.93 3.32 1.83l-1.63 1.14c-.38-.56-1.09-.94-1.69-1.11v3.2c1.94.55 3.52 1.25 3.52 3.38 0 1.94-1.46 3.19-3.41 3.45z"/></svg>
         </div>

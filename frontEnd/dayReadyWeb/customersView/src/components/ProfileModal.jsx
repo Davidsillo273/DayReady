@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useCart } from '../context/CartContext';
 import PersonalInfoView from './profile/PersonalInfoView';
 import OrdersView from './profile/OrdersView';
 import CardsView from './profile/CardsView';
@@ -8,8 +9,9 @@ import HelpView from './profile/HelpView';
 
 const BASE_URL = 'http://localhost:4000/api';
 
-export default function ProfileModal({ isOpen, onClose }) {
+export default function ProfileModal({ isOpen, onClose, customer, onProfileUpdated }) {
   const navigate = useNavigate();
+  const { clearCart, refreshCustomerId } = useCart();
   const [view, setView] = useState('menu'); // Estado para navegar entre secciones
   const [loggingOut, setLoggingOut] = useState(false);
 
@@ -32,6 +34,10 @@ export default function ProfileModal({ isOpen, onClose }) {
     } catch (error) {
       console.error('Error al cerrar sesión:', error);
     } finally {
+      localStorage.removeItem('customerId');
+      localStorage.removeItem('customerEmail');
+      clearCart();
+      refreshCustomerId();
       setLoggingOut(false);
       onClose();
       navigate('/');
@@ -60,13 +66,13 @@ export default function ProfileModal({ isOpen, onClose }) {
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
               <div className="w-20 h-20 bg-white rounded-full shadow-sm border border-gray-100 flex items-center justify-center text-2xl font-black text-slate-700 absolute -bottom-10">
-                DE
+                {`${customer?.name?.[0] || ''}${customer?.lastName?.[0] || ''}`.toUpperCase() || 'DR'}
               </div>
             </div>
 
             <div className="pt-14 pb-6 px-6 text-center">
-              <h2 className="text-xl font-bold text-gray-800">Diego Estudiante</h2>
-              <p className="text-gray-400 text-xs font-medium mt-1">ID: #2024-DR01</p>
+              <h2 className="text-xl font-bold text-gray-800">{customer?.name} {customer?.lastName}</h2>
+              <p className="text-gray-400 text-xs font-medium mt-1">Carnet: {customer?.carnet || '—'}</p>
 
               <div className="grid grid-cols-1 gap-2 mt-8">
                 <MenuButton title="Información Personal" sub="Nombre y seguridad" icon={icons.personal} color="bg-slate-50 text-slate-600" onClick={() => setView('personal')} />
@@ -88,8 +94,10 @@ export default function ProfileModal({ isOpen, onClose }) {
         ) : (
           /* Sub-vistas (Se renderizan dentro del mismo modal) */
           <div className="animate-in slide-in-from-right-5 duration-300">
-            {view === 'personal' && <PersonalInfoView onBack={() => setView('menu')} />}
-            {view === 'orders' && <OrdersView onBack={() => setView('menu')} />}
+            {view === 'personal' && (
+              <PersonalInfoView customer={customer} onBack={() => setView('menu')} onSaved={onProfileUpdated} />
+            )}
+            {view === 'orders' && <OrdersView customer={customer} onBack={() => setView('menu')} />}
             {view === 'cards' && <CardsView onBack={() => setView('menu')} />}
             {view === 'notifications' && <NotificationsView onBack={() => setView('menu')} />}
             {view === 'help' && <HelpView onBack={() => setView('menu')} />}

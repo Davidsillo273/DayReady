@@ -1,32 +1,39 @@
 import React, { useState } from 'react';
 import { useCart } from '../context/CartContext';
 import * as cartService from '../services/cartService';
+import { createOrder } from '../services/ordersService';
 
-export default function CheckoutModal({ isOpen, onClose }) {
+export default function CheckoutModal({ isOpen, onClose, customer }) {
   const [method, setMethod] = useState('wallet');
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
-  const { totalFinal, cartId, clearCart } = useCart();
+  const { items, totalFinal, cartId, clearCart } = useCart();
 
   const handleCheckout = async () => {
-    if (!cartId) {
+    if (!cartId || items.length === 0) {
       alert('No hay carrito para procesar');
       return;
     }
 
+    // Nota: el pago en sí sigue siendo simulado (no hay pasarela de pago
+    // ni forma de descontar la DayWallet en el backend todavía — el
+    // endpoint de saldo sólo permite sumar). Lo que sí es real es la
+    // orden: queda guardada en la base de datos y el carrito temporal se
+    // elimina, igual que hace la app móvil.
     try {
       setLoading(true);
 
-      // Aquí puedes integrar con un servicio de pagos
-      // Por ahora, solo simularemos el pago
-      console.log(`Procesando pago de $${totalFinal.toFixed(2)} con método: ${method}`);
+      await createOrder({
+        customerName: `${customer?.name || ''} ${customer?.lastName || ''}`.trim(),
+        customerContact: customer?.email,
+        items: items.map((item) => ({ name: item.name, quantity: item.cantidad, price: item.price })),
+        total: totalFinal,
+      });
 
-      // Simular procesamiento
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await cartService.deleteCart(cartId);
 
       setSuccessMessage('¡Pedido realizado exitosamente! 🎉');
-      
-      // Limpiar carrito después del éxito
+
       setTimeout(() => {
         clearCart();
         setSuccessMessage('');
@@ -78,7 +85,7 @@ export default function CheckoutModal({ isOpen, onClose }) {
                     </div>
                     <div>
                         <p className="font-semibold text-gray-800 text-sm">DayWallet</p>
-                        <p className="text-[11px] text-emerald-600 font-medium">Saldo: $15.50</p>
+                        <p className="text-[11px] text-emerald-600 font-medium">Saldo: ${Number(customer?.balance || 0).toFixed(2)}</p>
                     </div>
                 </div>
                 {method === 'wallet' && <div className="w-4 h-4 bg-slate-800 rounded-full flex items-center justify-center border-2 border-white shadow-sm">

@@ -1,9 +1,14 @@
 import React, { useState } from 'react';
 import logo from '../imgs/DayReadyLogo.png';
+import { useCart } from '../context/CartContext';
 
-export default function Navbar({ onCartClick, onWalletClick, onProfileClick }) {
+export default function Navbar({ onCartClick, onWalletClick, onProfileClick, customer }) {
   const [isLocalsOpen, setIsLocalsOpen] = useState(false);
   const [selectedLocal, setSelectedLocal] = useState("Todos los locales");
+  const { items } = useCart();
+
+  const cartCount = items.reduce((sum, item) => sum + item.cantidad, 0);
+  const initials = `${customer?.name?.[0] || ''}${customer?.lastName?.[0] || ''}`.toUpperCase() || 'DR';
 
   const locales = ["Todos los locales", "Local Azul", "Local Amarillo", "Local Verde"];
 
@@ -67,16 +72,18 @@ export default function Navbar({ onCartClick, onWalletClick, onProfileClick }) {
 
       <div className="flex items-center gap-4">
         <div onClick={onWalletClick} className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-xl font-bold cursor-pointer transition-colors text-sm shadow-sm">
-          Saldo: $15.50
+          Saldo: ${Number(customer?.balance || 0).toFixed(2)}
         </div>
 
         <button onClick={onCartClick} className="relative p-2 hover:bg-gray-100 rounded-full transition-colors border-none bg-transparent">
           <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
-          <span className="absolute top-0 right-0 bg-red-500 text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center font-bold border-2 border-white">2</span>
+          {cartCount > 0 && (
+            <span className="absolute top-0 right-0 bg-red-500 text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center font-bold border-2 border-white">{cartCount}</span>
+          )}
         </button>
 
         <div onClick={onProfileClick} className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center text-orange-700 font-bold border border-orange-200 cursor-pointer hover:bg-orange-200 transition shadow-sm">
-          DE
+          {initials}
         </div>
       </div>
     </nav>
