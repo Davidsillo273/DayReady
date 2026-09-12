@@ -5,11 +5,14 @@ import Button from '../../components/Button';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import dayReadyLogo from '../../imgs/DayReadyLogo.png';
 import backgroundImage from '../../imgs/backGroundLogin.png';
+import { getCustomerByEmail } from '../../services/customersService';
+import { useCart } from '../../context/CartContext';
 
 const BASE_URL = 'http://localhost:4000/api';
 
 export default function LoginCustomer() {
     const navigate = useNavigate();
+    const { refreshCustomerId } = useCart();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
@@ -49,6 +52,17 @@ export default function LoginCustomer() {
                     setErrors({ general: 'Error al iniciar sesión. Intenta de nuevo.' });
                 }
                 return;
+            }
+
+            // El login sólo deja una cookie de sesión, no devuelve el
+            // perfil del cliente. Se busca aparte por correo y se guarda
+            // en localStorage: es lo que lee CartContext (customerId) y lo
+            // que usa el Storefront para mostrar el saldo y los pedidos.
+            const customer = await getCustomerByEmail(email.toLowerCase().trim());
+            if (customer) {
+                localStorage.setItem('customerId', customer._id);
+                localStorage.setItem('customerEmail', customer.email);
+                refreshCustomerId();
             }
 
             navigate('/storefront');
