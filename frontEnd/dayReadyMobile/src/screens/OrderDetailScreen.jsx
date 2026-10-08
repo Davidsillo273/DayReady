@@ -9,6 +9,7 @@ import { Feather } from "@expo/vector-icons";
 import StatusBadge from "../components/StatusBadge";
 import PrimaryButton from "../components/PrimaryButton";
 import ordersService from "../services/ordersService";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors, fonts, radius } from "../theme/colors";
 
 const PLACEHOLDER = "https://placehold.co/120x100/F4A261/FFFFFF/png?text=DayReady";
@@ -17,6 +18,7 @@ export default function OrderDetailScreen({ route, navigation }) {
   const { orderId } = route.params;
   const [order, setOrder] = useState(null);
   const [cancelling, setCancelling] = useState(false);
+  const insets = useSafeAreaInsets();
 
   const loadOrder = useCallback(async () => {
     try {
@@ -65,7 +67,7 @@ export default function OrderDetailScreen({ route, navigation }) {
   const canReview = order.estado !== "cancelado";
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={{ padding: 20 }}>
+    <ScrollView style={styles.screen} contentContainerStyle={{ padding: 20, paddingBottom: 20 + insets.bottom }}>
       <View style={styles.card}>
         <View style={styles.headerRow}>
           <Text style={styles.orderNumber}>Pedido #{order._id.slice(-6).toUpperCase()}</Text>
@@ -140,7 +142,7 @@ const styles = StyleSheet.create({
   orderNumber: { fontFamily: fonts.headingExtra, fontSize: 17, color: colors.textDark },
   infoRow: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 8 },
   infoLabel: { fontFamily: fonts.heading, fontSize: 13, color: colors.textDark },
-  infoValue: { fontFamily: fonts.body, fontSize: 13 },
+  infoValue: { flex: 1, fontFamily: fonts.body, fontSize: 13 },
   sectionTitle: { fontFamily: fonts.heading, fontSize: 14, color: colors.textDark, marginTop: 12, marginBottom: 10 },
   item: { flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: colors.bgPeach, borderRadius: radius.md, padding: 12, marginBottom: 10 },
   itemImage: { width: 60, height: 56, borderRadius: 10 },

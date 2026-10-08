@@ -4,17 +4,20 @@
 // hacia las pestañas principales (no se navega manualmente a "Home": el
 // cambio de pantalla ocurre porque "customer" deja de ser null).
 import React, { useState } from "react";
-import { View, Text, Image, ScrollView, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform } from "react-native";
 import WaveHeader from "../components/WaveHeader";
 import InputField from "../components/InputField";
+import Logo from "../components/Logo";
 import PrimaryButton from "../components/PrimaryButton";
 import SocialButton from "../components/SocialButton";
 import { useAuth } from "../context/AuthContext";
 import { validateEmail, validatePassword } from "../utils/validators";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors, fonts } from "../theme/colors";
 
 export default function LoginScreen({ navigation }) {
   const { login } = useAuth();
+  const insets = useSafeAreaInsets();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState({});
@@ -47,10 +50,8 @@ export default function LoginScreen({ navigation }) {
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <View style={styles.screen}>
-        <WaveHeader color={colors.primary} lightColor={colors.primaryLight} height={220}>
-          <View style={styles.logoBadge}>
-            <Image source={require("../../assets/DayReadyLogo.png")} style={styles.logo} resizeMode="contain" />
-          </View>
+        <WaveHeader color={colors.primary} lightColor={colors.primaryLight} height={220} safeTop>
+          <Logo />
         </WaveHeader>
 
         <ScrollView contentContainerStyle={styles.form}>
@@ -81,7 +82,7 @@ export default function LoginScreen({ navigation }) {
           <SocialButton onPress={() => setGeneralError("El inicio de sesión con Google llegará próximamente.")} />
         </ScrollView>
 
-        <TouchableOpacity style={styles.footer} onPress={() => navigation.navigate("Register")}>
+        <TouchableOpacity style={[styles.footer, { paddingBottom: 18 + insets.bottom }]} onPress={() => navigation.navigate("Register")}>
           <Text style={styles.footerText}>
             ¿Nuevo acá? <Text style={styles.footerLink}>Regístrate</Text>
           </Text>
@@ -93,8 +94,6 @@ export default function LoginScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.white },
-  logoBadge: { width: 150, height: 150, borderRadius: 75, backgroundColor: colors.white, alignItems: "center", justifyContent: "center", overflow: "hidden" },
-  logo: { width: 190, height: 190 },
   form: { padding: 28, paddingTop: 24 },
   generalError: { color: colors.red, fontSize: 13, marginBottom: 12, fontFamily: fonts.body },
   forgot: { color: colors.green, fontFamily: fonts.heading, fontSize: 13, marginTop: -8, marginBottom: 20 },

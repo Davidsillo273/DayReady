@@ -4,6 +4,10 @@
 // se guarda en el backend cuando llega a Checkout, y ahí sí queda un
 // documento real en la colección "carts" que se puede actualizar o borrar.
 //
+// Un mismo producto puede venir del catálogo o del menú del día, con
+// precio y stock distintos, así que cada línea se identifica con "key":
+// el id del menú si vino de ahí, o el del producto si no.
+//
 // Cada item recuerda el stock del producto, así el carrito nunca deja
 // pedir más unidades de las que hay. Aun así el backend vuelve a validar
 // el stock al crear la orden (por si otro cliente compró antes).
@@ -13,8 +17,11 @@ import { useAuth } from "./AuthContext";
 
 const CartContext = createContext(null);
 
+// Identificador de la línea del carrito para un producto (ver arriba).
+export const cartKey = (product) => product.menuId || product._id;
+
 export function CartProvider({ children }) {
-  const [items, setItems] = useState([]); // [{ productId, name, image, price, cantidad, stock }]
+  const [items, setItems] = useState([]); // [{ key, productId, menuId, name, image, price, cantidad, stock }]
   const [cartId, setCartId] = useState(null); // id de Mongo una vez creado en el backend
   const { customer } = useAuth();
 
@@ -28,7 +35,8 @@ export function CartProvider({ children }) {
   // Devuelve null si se agregó, o un mensaje si se topó con el stock.
   const addItem = (product, cantidad = 1) => {
     const stock = Number(product.quantity ?? 0);
-    const existing = items.find((i) => i.productId === product._id);
+    const key = cartKey(product);
+    const existing = items.find((i) => i.key === key);
     const alreadyInCart = existing?.cantidad || 0;
 
     if (stock <= 0) return `"${product.name}" está agotado.`;
@@ -38,13 +46,15 @@ export function CartProvider({ children }) {
 
     if (existing) {
       setItems((prev) =>
-        prev.map((i) => (i.productId === product._id ? { ...i, cantidad: i.cantidad + cantidad, stock } : i))
+        prev.map((i) => (i.key === key ? { ...i, cantidad: i.cantidad + cantidad, stock } : i))
       );
     } else {
       setItems((prev) => [
         ...prev,
         {
+          key,
           productId: product._id,
+          menuId: product.menuId,
           name: product.name,
           image: product.image,
           price: Number(product.price),
@@ -56,25 +66,25 @@ export function CartProvider({ children }) {
     return null;
   };
 
-  const updateQuantity = (productId, cantidad) => {
-    if (cantidad <= 0) return removeItem(productId);
+  const updateQuantity = (key, cantidad) => {
+    if (cantidad <= 0) return removeItem(key);
     setItems((prev) =>
-      prev.map((i) => (i.productId === productId ? { ...i, cantidad: Math.min(cantidad, i.stock) } : i))
+      prev.map((i) => (i.key === key ? { ...i, cantidad: Math.min(cantidad, i.stock) } : i))
     );
   };
 
-  const removeItem = (productId) => {
-    setItems((prev) => prev.filter((i) => i.productId !== productId));
+  const removeItem = (key) => {
+    setItems((prev) => prev.filter((i) => i.key !== key));
   };
 
   // Si el backend avisa que ya no hay stock suficiente, se ajusta el item
   // al stock real (o se quita si se agotó).
-  const syncStock = (productId, available) => {
+  const syncStock = (key, available) => {
     setItems((prev) =>
       available <= 0
-        ? prev.filter((i) => i.productId !== productId)
+        ? prev.filter((i) => i.key !== key)
         : prev.map((i) =>
-            i.productId === productId ? { ...i, stock: available, cantidad: Math.min(i.cantidad, available) } : i
+            i.key === key ? { ...i, stock: available, cantidad: Math.min(i.cantidad, available) } : i
           )
     );
   };

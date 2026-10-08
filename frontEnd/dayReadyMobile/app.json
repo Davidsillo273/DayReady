@@ -15,7 +15,7 @@
       "package": "com.dayready.mobile",
       "versionCode": 1,
       "adaptiveIcon": {
-        "backgroundColor": "#F4A261",
+        "backgroundColor": "#FFFFFF",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -30,9 +30,9 @@
         "expo-splash-screen",
         {
           "image": "./assets/splash-icon.png",
-          "imageWidth": 220,
+          "imageWidth": 260,
           "resizeMode": "contain",
-          "backgroundColor": "#F4A261"
+          "backgroundColor": "#FFFFFF"
         }
       ],
       "expo-font",

@@ -5,17 +5,19 @@ import React from "react";
 import { View, Text, ScrollView, StyleSheet } from "react-native";
 import Logo from "../components/Logo";
 import PrimaryButton from "../components/PrimaryButton";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors, fonts } from "../theme/colors";
 
 export default function TermsScreen({ navigation }) {
+  const insets = useSafeAreaInsets();
   return (
     <View style={styles.screen}>
       <View style={styles.header}>
-        <Logo color={colors.primaryDark} size={0.85} />
+        <Logo size={0.85} />
         <Text style={styles.subtitle}>Información legal</Text>
       </View>
 
-      <ScrollView style={styles.card} contentContainerStyle={{ padding: 24 }}>
+      <ScrollView style={styles.card} contentContainerStyle={{ padding: 24, paddingBottom: 24 + insets.bottom }}>
         <Text style={styles.title}>Términos y Condiciones</Text>
 
         <Text style={styles.sectionTitle}>1. Uso de la App</Text>

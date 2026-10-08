@@ -1,17 +1,44 @@
 import mongoose from "mongoose";
 import orderModel from "../models/orderModels.js";
 import productsModel from "../models/productsModel.js";
+import dailyMenuModel from "../models/dailyMenuModel.js";
 
 const orderController = {};
 
-// Devuelve al inventario lo que se había descontado por una orden. Sólo
-// aplica a los items que guardaron productId (las órdenes viejas de la web
-// no lo tienen, así que esas no mueven stock).
+// Devuelve al inventario lo que se había descontado por una orden. Los
+// items del menú del día devuelven al stock de ese menú; el resto, al del
+// producto. Las órdenes viejas de la web no guardan ninguno de los dos, así
+// que esas no mueven stock.
 const restoreStock = async (items) => {
   for (const item of items) {
-    if (!item.productId) continue;
-    await productsModel.updateOne({ _id: item.productId }, { $inc: { quantity: item.quantity } });
+    if (item.menuId) {
+      await dailyMenuModel.updateOne({ _id: item.menuId }, { $inc: { stock: item.quantity } });
+    } else if (item.productId) {
+      await productsModel.updateOne({ _id: item.productId }, { $inc: { quantity: item.quantity } });
+    }
   }
+};
+
+// Descuenta el stock de un item y devuelve null, o lo que queda disponible
+// si no alcanza. La condición ">= cantidad" dentro del mismo update evita
+// vender de más aunque dos clientes compren al mismo tiempo.
+const reserveStock = async (item, quantity) => {
+  if (item.menuId) {
+    const updated = await dailyMenuModel.findOneAndUpdate(
+      { _id: item.menuId, stock: { $gte: quantity } },
+      { $inc: { stock: -quantity } }
+    );
+    if (updated) return null;
+    const menu = await dailyMenuModel.findById(item.menuId);
+    return menu ? menu.stock || 0 : 0;
+  }
+  const updated = await productsModel.findOneAndUpdate(
+    { _id: item.productId, quantity: { $gte: quantity } },
+    { $inc: { quantity: -quantity } }
+  );
+  if (updated) return null;
+  const product = await productsModel.findById(item.productId);
+  return product ? product.quantity || 0 : 0;
 };
 
 // Valida la forma de cada item antes de tocar la base de datos.
@@ -33,6 +60,9 @@ const validateItems = (items) => {
     }
     if (item.productId && !mongoose.isValidObjectId(item.productId)) {
       return `Invalid product id for "${item.name}"`;
+    }
+    if (item.menuId && !mongoose.isValidObjectId(item.menuId)) {
+      return `Invalid menu id for "${item.name}"`;
     }
   }
   return null;
@@ -98,28 +128,21 @@ orderController.insertOrder = async (req, res) => {
       return res.status(400).json({ message: "Invalid customer id" });
     }
 
-    // Descuenta el stock producto por producto. La condición
-    // "quantity >= cantidad" dentro del mismo update evita vender más de lo
-    // que hay aunque dos clientes compren al mismo tiempo.
+    // Descuenta el stock item por item (del menú del día o del producto).
     for (const item of items) {
-      if (!item.productId) continue;
+      if (!item.productId && !item.menuId) continue;
       const quantity = Number(item.quantity);
-      const updated = await productsModel.findOneAndUpdate(
-        { _id: item.productId, quantity: { $gte: quantity } },
-        { $inc: { quantity: -quantity } },
-        { new: true }
-      );
-      if (!updated) {
+      const available = await reserveStock(item, quantity);
+      if (available !== null) {
         await restoreStock(reserved);
-        const product = await productsModel.findById(item.productId);
-        const available = product ? product.quantity || 0 : 0;
         return res.status(409).json({
           message: `Stock insuficiente para "${item.name}". Disponibles: ${available}.`,
           productId: item.productId,
+          menuId: item.menuId,
           available,
         });
       }
-      reserved.push({ productId: item.productId, quantity });
+      reserved.push({ productId: item.productId, menuId: item.menuId, quantity });
     }
 
     // Calcular total si no viene
@@ -139,6 +162,7 @@ orderController.insertOrder = async (req, res) => {
       customerContact: customerContact?.trim() || "",
       items: items.map(item => ({
         productId: item.productId || undefined,
+        menuId: item.menuId || undefined,
         name: item.name.trim(),
         quantity: Number(item.quantity),
         price: Number(item.price),
@@ -199,6 +223,7 @@ orderController.updateOrder = async (req, res) => {
       if (itemsError) return res.status(400).json({ message: itemsError });
       updateData.items = items.map(item => ({
         productId: item.productId || undefined,
+        menuId: item.menuId || undefined,
         name: item.name.trim(),
         quantity: Number(item.quantity),
         price: Number(item.price),
