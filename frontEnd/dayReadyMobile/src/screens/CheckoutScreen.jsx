@@ -5,6 +5,8 @@ import React, { useState } from "react";
 import { View, Text, Image, ScrollView, TouchableOpacity, StyleSheet, Alert } from "react-native";
 import InputField from "../components/InputField";
 import PrimaryButton from "../components/PrimaryButton";
+import EmptyState from "../components/EmptyState";
+import { validatePhone } from "../utils/validators";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import { colors, fonts, radius } from "../theme/colors";
@@ -18,12 +20,16 @@ export default function CheckoutScreen({ navigation }) {
   const [phone, setPhone] = useState(customer?.phone || "");
   const [pickupTime, setPickupTime] = useState(PICKUP_SLOTS[1]);
   const [loading, setLoading] = useState(false);
+  const [phoneError, setPhoneError] = useState(null);
 
   const handleContinue = async () => {
     if (cart.items.length === 0) {
       Alert.alert("Carrito vacío", "Agrega al menos un producto antes de continuar.");
       return;
     }
+    const error = validatePhone(phone);
+    setPhoneError(error);
+    if (error) return;
 
     setLoading(true);
     try {
@@ -41,7 +47,7 @@ export default function CheckoutScreen({ navigation }) {
       <View style={styles.card}>
         <InputField label="Nombre" value={`${customer?.name || ""} ${customer?.lastName || ""}`} editable={false} />
         <InputField label="Correo electrónico" value={customer?.email || ""} editable={false} />
-        <InputField label="Teléfono" value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
+        <InputField label="Teléfono" value={phone} onChangeText={setPhone} keyboardType="phone-pad" error={phoneError} />
 
         <Text style={styles.label}>Selecciona hora de recogida</Text>
         <View style={styles.slotsRow}>
@@ -58,7 +64,11 @@ export default function CheckoutScreen({ navigation }) {
 
         <Text style={styles.sectionTitle}>Detalles del pedido</Text>
         {cart.items.length === 0 ? (
-          <Text style={styles.empty}>No hay productos en el carrito</Text>
+          <View style={styles.empty}>
+            <EmptyState icon="shopping-cart" title="No hay productos en el carrito" message="No puedes hacer un pedido sin productos.">
+              <PrimaryButton title="Ir al catálogo" onPress={() => navigation.navigate("Main", { screen: "Inicio" })} style={{ width: 180 }} />
+            </EmptyState>
+          </View>
         ) : (
           cart.items.map((item) => (
             <View key={item.productId} style={styles.item}>
@@ -79,7 +89,7 @@ export default function CheckoutScreen({ navigation }) {
           <Text style={styles.totalValue}>${cart.total.toFixed(2)}</Text>
         </View>
 
-        <PrimaryButton title="Siguiente" onPress={handleContinue} loading={loading} />
+        <PrimaryButton title="Siguiente" onPress={handleContinue} loading={loading} disabled={cart.items.length === 0} />
       </View>
     </ScrollView>
   );
@@ -95,7 +105,7 @@ const styles = StyleSheet.create({
   slotText: { fontSize: 12, color: colors.textDark },
   slotTextActive: { color: colors.white, fontFamily: fonts.heading },
   sectionTitle: { fontFamily: fonts.heading, fontSize: 14, color: colors.textDark, marginBottom: 10 },
-  empty: { backgroundColor: colors.bgPeach, borderRadius: radius.md, padding: 20, textAlign: "center", color: "#aaa" },
+  empty: { backgroundColor: colors.bgPeach, borderRadius: radius.md },
   item: { flexDirection: "row", gap: 12, backgroundColor: colors.bgPeach, borderRadius: radius.md, padding: 14, marginBottom: 10 },
   itemImage: { width: 70, height: 65, borderRadius: 10 },
   itemText: { fontSize: 12, marginBottom: 3, color: colors.textDark },

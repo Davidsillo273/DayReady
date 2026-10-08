@@ -2,32 +2,52 @@
 // PUT /customers/:id, y muestra el saldo de la DayWallet (billetera digital
 // del proyecto, campo "balance" del modelo Customer) en vez de un dato
 // inventado.
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import InputField from "../components/InputField";
 import PrimaryButton from "../components/PrimaryButton";
 import customersService from "../services/customersService";
 import { useAuth } from "../context/AuthContext";
-import { validateName, validatePhone } from "../utils/validators";
+import { validateName, validatePhone, validateAge } from "../utils/validators";
 import { colors, fonts } from "../theme/colors";
 
-export default function ProfileScreen() {
+export default function ProfileScreen({ navigation }) {
   const { customer, logout, refreshProfile } = useAuth();
   const [name, setName] = useState(customer?.name || "");
   const [lastName, setLastName] = useState(customer?.lastName || "");
   const [phone, setPhone] = useState(customer?.phone || "");
+  const [age, setAge] = useState(customer?.age ? String(customer.age) : "");
+
+  // Cuando el perfil cambia (al guardar o al refrescar) los campos se
+  // sincronizan con lo que quedó en la base de datos.
+  useEffect(() => {
+    setName(customer?.name || "");
+    setLastName(customer?.lastName || "");
+    setPhone(customer?.phone || "");
+    setAge(customer?.age ? String(customer.age) : "");
+  }, [customer]);
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
-    const fieldErrors = { name: validateName(name, "El nombre"), lastName: validateName(lastName, "El apellido"), phone: validatePhone(phone) };
+    const fieldErrors = {
+      name: validateName(name, "El nombre"),
+      lastName: validateName(lastName, "El apellido"),
+      phone: validatePhone(phone),
+      age: validateAge(age),
+    };
     if (Object.values(fieldErrors).some(Boolean)) return setErrors(fieldErrors);
 
     setErrors({});
     setSaving(true);
     try {
-      await customersService.updateProfile(customer._id, { name, lastName, phone });
+      await customersService.updateProfile(customer._id, {
+        name: name.trim(),
+        lastName: lastName.trim(),
+        phone: phone.trim(),
+        age: Number(age),
+      });
       await refreshProfile();
       Alert.alert("Listo", "Perfil actualizado correctamente.");
     } catch (error) {
@@ -65,8 +85,23 @@ export default function ProfileScreen() {
         <InputField label="Correo electrónico" value={customer?.email || ""} editable={false} />
         <InputField label="Carnet" value={customer?.carnet || ""} editable={false} />
         <InputField label="Teléfono" value={phone} onChangeText={setPhone} keyboardType="phone-pad" error={errors.phone} />
+        <InputField
+          label="Edad"
+          value={age}
+          onChangeText={(v) => setAge(v.replace(/\D/g, "").slice(0, 2))}
+          keyboardType="number-pad"
+          error={errors.age}
+        />
 
         <PrimaryButton title="Guardar cambios" onPress={handleSave} loading={saving} style={{ marginTop: 8 }} />
+
+        <TouchableOpacity
+          style={styles.secondaryButton}
+          onPress={() => navigation.navigate("ChangePassword", { email: customer.email })}
+        >
+          <Feather name="lock" size={16} color={colors.primaryDark} />
+          <Text style={styles.secondaryText}>Cambiar contraseña</Text>
+        </TouchableOpacity>
 
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Feather name="log-out" size={16} color={colors.red} />
@@ -86,6 +121,8 @@ const styles = StyleSheet.create({
   walletLabel: { fontFamily: fonts.heading, fontSize: 12, color: colors.textDark },
   walletValue: { fontFamily: fonts.headingExtra, fontSize: 14, color: colors.primaryDark },
   card: { backgroundColor: colors.white, borderRadius: 20, padding: 20, margin: 20, marginTop: -10, elevation: 2 },
-  logoutButton: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, marginTop: 20, paddingVertical: 10 },
+  secondaryButton: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, marginTop: 16, paddingVertical: 10 },
+  secondaryText: { color: colors.primaryDark, fontFamily: fonts.heading, fontSize: 14 },
+  logoutButton: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, marginTop: 4, paddingVertical: 10 },
   logoutText: { color: colors.red, fontFamily: fonts.heading, fontSize: 14 },
 });

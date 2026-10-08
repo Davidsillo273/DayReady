@@ -16,4 +16,25 @@ customerUtils.validateCarnet = (carnet) => {
   return { valid: true };
 };
 
+customerUtils.validateAge = (age) => {
+  const parsed = Number(age);
+  if (age === undefined || age === null || age === "" || !Number.isInteger(parsed)) {
+    return { valid: false, message: "Age must be a whole number." };
+  }
+  if (parsed < 12 || parsed > 99) {
+    return { valid: false, message: "Age must be between 12 and 99." };
+  }
+  return { valid: true };
+};
+
+customerUtils.validatePhone = (phone) => {
+  if (!phone || typeof phone !== "string" || phone.trim() === "") {
+    return { valid: false, message: "Phone is required." };
+  }
+  if (!/^[0-9-\s+]{7,15}$/.test(phone.trim())) {
+    return { valid: false, message: "Invalid phone number." };
+  }
+  return { valid: true };
+};
+
 export default customerUtils;

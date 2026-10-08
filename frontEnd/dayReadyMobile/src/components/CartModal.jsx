@@ -7,6 +7,7 @@ import { Modal, View, Text, Image, TouchableOpacity, ScrollView, StyleSheet } fr
 import { Feather } from "@expo/vector-icons";
 import QuantityControl from "./QuantityControl";
 import PrimaryButton from "./PrimaryButton";
+import EmptyState from "./EmptyState";
 import { colors, fonts, radius } from "../theme/colors";
 
 export default function CartModal({ visible, items, total, onClose, onUpdateQuantity, onRemove, onCheckout }) {
@@ -19,7 +20,7 @@ export default function CartModal({ visible, items, total, onClose, onUpdateQuan
 
           <ScrollView style={{ maxHeight: 380 }}>
             {items.length === 0 ? (
-              <Text style={styles.empty}>Tu carrito está vacío</Text>
+              <EmptyState icon="shopping-cart" title="Tu carrito está vacío" message="Agrega productos del catálogo para hacer un pedido." />
             ) : (
               items.map((item) => (
                 <View key={item.productId} style={styles.item}>
@@ -35,8 +36,12 @@ export default function CartModal({ visible, items, total, onClose, onUpdateQuan
                       </Text>
                       <QuantityControl
                         value={item.cantidad}
+                        max={item.stock}
                         onChange={(qty) => onUpdateQuantity(item.productId, qty)}
                       />
+                      {item.cantidad >= item.stock ? (
+                        <Text style={styles.stockHint}>Máximo disponible: {item.stock}</Text>
+                      ) : null}
                     </View>
                   </View>
                   <TouchableOpacity style={styles.removeButton} onPress={() => onRemove(item.productId)}>
@@ -61,7 +66,7 @@ const styles = StyleSheet.create({
   sheet: { backgroundColor: colors.white, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 24, paddingBottom: 36 },
   handle: { width: 40, height: 4, backgroundColor: "#E0E0E8", borderRadius: 4, alignSelf: "center", marginBottom: 20 },
   title: { fontFamily: fonts.heading, fontSize: 18, color: colors.textDark, textAlign: "center", marginBottom: 20 },
-  empty: { textAlign: "center", color: colors.textLight, paddingVertical: 40 },
+  stockHint: { fontSize: 11, color: colors.primaryDark, marginTop: 6 },
   item: { backgroundColor: colors.bgPeach, borderRadius: radius.md, padding: 16, marginBottom: 12 },
   itemImage: { width: 80, height: 80, borderRadius: 10 },
   itemText: { fontSize: 13, color: colors.textDark, marginBottom: 4 },

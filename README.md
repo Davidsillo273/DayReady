@@ -46,3 +46,11 @@ Para generar la version de produccion: npm run build
 
 Detalles del Sistema
 El sistema implementa una arquitectura de componentes modulares. El perfil de usuario funciona como un contenedor de estados que permite cambiar entre diferentes secciones (Mis Pedidos, Tarjetas, Ayuda) de manera fluida sin cerrar la ventana principal, mejorando la experiencia de usuario.
+
+Aplicacion Movil
+La app movil (Expo / React Native) esta en frontEnd/dayReadyMobile. Su README tiene los integrantes, las funcionalidades, las dependencias instaladas, la configuracion del backend, los datos de prueba (npm run seed dentro de backend) y los pasos para generar el APK.
+
+Integrantes
+Fernando Javier Guerrero Iraheta
+David Eduardo Guardado Castro
+Ivanya Nolazco Cabrera

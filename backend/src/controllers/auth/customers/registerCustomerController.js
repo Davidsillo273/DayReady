@@ -82,11 +82,13 @@ registerCustomerController.verifyCode = async (req, res) => {
 };
 
 registerCustomerController.personalInfo = async (req, res) => {
-  const { name, lastName, carnet, phone } = req.body;
+  const { name, lastName, carnet, phone, age } = req.body;
 
   const validation = utils.runValidations([
     () => utils.validateName(name, "First name"),
     () => utils.validateName(lastName, "Last name"),
+    () => customerUtils.validatePhone(phone),
+    () => customerUtils.validateAge(age),
   ]);
 
   if (!validation.valid) {
@@ -123,6 +125,7 @@ registerCustomerController.personalInfo = async (req, res) => {
           lastName: lastName.trim(),
           carnet: carnet?.trim() || null,
           phone: phone || null,
+          age: Number(age),
         },
       },
       "30m"
@@ -179,6 +182,7 @@ registerCustomerController.setPassword = async (req, res) => {
       email,
       carnet: personalInfo.carnet,
       phone: personalInfo.phone,
+      age: personalInfo.age,
       password: passwordHash,
       addresses: [],
       favorites: [],

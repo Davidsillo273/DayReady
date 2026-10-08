@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "dayReadyMobile",
+    "name": "DayReady",
     "slug": "dayReadyMobile",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -13,6 +13,7 @@
     },
     "android": {
       "package": "com.dayready.mobile",
+      "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#F4A261",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -34,7 +35,15 @@
           "backgroundColor": "#F4A261"
         }
       ],
-      "expo-font"
+      "expo-font",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
+      ]
     ]
   }
 }

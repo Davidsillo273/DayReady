@@ -11,6 +11,7 @@ import PrimaryButton from "../components/PrimaryButton";
 import ordersService from "../services/ordersService";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
+import { validateCardNumber, validateExpiry, validateCvc, validateName } from "../utils/validators";
 import { colors, fonts } from "../theme/colors";
 
 function formatCardNumber(value) {
@@ -31,28 +32,51 @@ export default function PaymentScreen({ route, navigation }) {
   const [expiry, setExpiry] = useState("");
   const [cvc, setCvc] = useState("");
   const [holder, setHolder] = useState("");
+  const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(null); // guarda el total pagado para la pantalla final
 
   const handlePay = async () => {
-    if (!cardNumber || !expiry || !cvc || !holder) {
-      Alert.alert("Datos incompletos", "Completa todos los campos de la tarjeta.");
+    if (cart.items.length === 0) {
+      Alert.alert("Carrito vacío", "No hay productos para pagar.");
       return;
     }
+    const fieldErrors = {
+      cardNumber: validateCardNumber(cardNumber),
+      expiry: validateExpiry(expiry),
+      cvc: validateCvc(cvc),
+      holder: validateName(holder, "El nombre del titular"),
+    };
+    setErrors(fieldErrors);
+    if (Object.values(fieldErrors).some(Boolean)) return;
 
     setLoading(true);
     try {
       await ordersService.create({
+        customerId: customer._id,
         customerName: `${customer.name} ${customer.lastName}`,
         customerContact: customer.email,
-        items: cart.items.map((i) => ({ name: i.name, quantity: i.cantidad, price: i.price })),
+        items: cart.items.map((i) => ({ productId: i.productId, name: i.name, quantity: i.cantidad, price: i.price })),
         total: cart.total,
+        horaRecogida: pickupTime,
       });
       const paidTotal = cart.total;
       await cart.discardPersistedCart();
+      // Los datos de la tarjeta no se guardan en ningún lado.
+      setCardNumber("");
+      setExpiry("");
+      setCvc("");
+      setHolder("");
       setSuccess(paidTotal);
     } catch (error) {
-      Alert.alert("No se pudo procesar el pago", error.message);
+      // 409 = otro cliente compró antes y ya no alcanza el stock: se ajusta
+      // el carrito a lo que realmente queda.
+      if (error.status === 409 && error.data?.productId) {
+        cart.syncStock(error.data.productId, error.data.available);
+        Alert.alert("Stock insuficiente", `${error.message} Ajustamos tu carrito, revísalo antes de pagar.`);
+      } else {
+        Alert.alert("No se pudo procesar el pago", error.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -84,10 +108,18 @@ export default function PaymentScreen({ route, navigation }) {
           keyboardType="number-pad"
           value={cardNumber}
           onChangeText={(v) => setCardNumber(formatCardNumber(v))}
+          error={errors.cardNumber}
         />
         <View style={styles.row}>
           <View style={{ flex: 1 }}>
-            <InputField label="Vencimiento" placeholder="MM/AA" value={expiry} onChangeText={(v) => setExpiry(formatExpiry(v))} />
+            <InputField
+              label="Vencimiento"
+              placeholder="MM/AA"
+              keyboardType="number-pad"
+              value={expiry}
+              onChangeText={(v) => setExpiry(formatExpiry(v))}
+              error={errors.expiry}
+            />
           </View>
           <View style={{ flex: 1 }}>
             <InputField
@@ -96,17 +128,23 @@ export default function PaymentScreen({ route, navigation }) {
               keyboardType="number-pad"
               value={cvc}
               onChangeText={(v) => setCvc(v.replace(/\D/g, "").slice(0, 3))}
+              error={errors.cvc}
             />
           </View>
         </View>
-        <InputField label="Nombre del titular" placeholder="Nombre completo" value={holder} onChangeText={setHolder} />
+        <InputField label="Nombre del titular" placeholder="Nombre completo" value={holder} onChangeText={setHolder} error={errors.holder} />
 
         <View style={styles.totalRow}>
           <Text style={styles.totalLabel}>Total</Text>
           <Text style={styles.totalValue}>${cart.total.toFixed(2)}</Text>
         </View>
 
-        <PrimaryButton title={`Pagar $${cart.total.toFixed(2)}`} onPress={handlePay} loading={loading} />
+        <PrimaryButton
+          title={`Pagar ${cart.total.toFixed(2)}`}
+          onPress={handlePay}
+          loading={loading}
+          disabled={cart.items.length === 0}
+        />
 
         <View style={styles.securityRow}>
           <Feather name="shield" size={16} color={colors.primary} />

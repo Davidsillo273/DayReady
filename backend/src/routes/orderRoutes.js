@@ -8,6 +8,10 @@ router
   .get(orderController.getAllOrders)
   .post(orderController.insertOrder);
 
+router.route("/customer/:customerId").get(orderController.getOrdersByCustomer);
+
+router.route("/:id/cancel").patch(orderController.cancelOrder);
+
 router
   .route("/:id")
   .get(orderController.getOrderById)
