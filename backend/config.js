@@ -7,11 +7,17 @@ export const config = {
         URI: process.env.DB_URI
     },
     JWT: {
-        secret: process.env.JWT_Secret_key
+        secret: process.env.JWT_Secret_key || process.env.JWT_Secret_Key
     },
     email: {
         user_email: process.env.USER_EMAIL,
         user_password: process.env.USER_PASSWORD
+    },
+    mailjet: {
+        api_key: process.env.API_KEY_MAILJET,
+        api_secret: process.env.API_SECRET_MAILJET,
+        from_email: process.env.MAILJET_FROM_EMAIL || process.env.USER_EMAIL,
+        from_name: process.env.MAILJET_FROM_NAME || "DayReady"
     },
     cloudinary: {
         cloudinary_name: process.env.CLOUDINARY_CLOUD_NAME,

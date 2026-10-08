@@ -1,7 +1,7 @@
-import nodemailer from "nodemailer";
 import crypto from "crypto";
 import jsonwebtoken from "jsonwebtoken";
 import { config } from "../../../config.js";
+import { deliverEmail } from "./mailer.js";
 
 const generateVerificationCode = () => {
   return crypto.randomBytes(3).toString("hex").toUpperCase();
@@ -15,24 +15,9 @@ const verifyToken = (token) => {
   return jsonwebtoken.verify(token, config.JWT.secret);
 };
 
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: config.email.user_email,
-    pass: config.email.user_password,
-  },
-});
-
 const sendEmail = async (to, subject, html) => {
-  const mailOptions = {
-    from: `"DayReady" <${config.email.user_email}>`,
-    to,
-    subject,
-    html,
-  };
-
   try {
-    const info = await transporter.sendMail(mailOptions);
+    const info = await deliverEmail(to, subject, html);
     return info;
   } catch (error) {
     console.error("sendEmail error:", error);
