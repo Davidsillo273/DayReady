@@ -8,6 +8,14 @@ const orderSchema = new Schema(
       ref: "Cart",
       required: false,
     },
+    // Cliente que hizo el pedido (lo usa la app móvil para el historial
+    // y para validar quién puede valorar un producto). Es opcional para no
+    // romper las órdenes que la web crea sin cliente asociado.
+    customerId: {
+      type: mongoose.Types.ObjectId,
+      ref: "Customers",
+      required: false,
+    },
     // Datos del cliente
     customerName: {
       type: String,
@@ -20,6 +28,9 @@ const orderSchema = new Schema(
     // Lista de productos
     items: [
       {
+        // Referencia al producto: con ella se descuenta el stock al crear
+        // la orden y se devuelve si la orden se cancela.
+        productId: { type: mongoose.Types.ObjectId, ref: "products" },
         name: { type: String, required: true },
         quantity: { type: Number, required: true, min: 1 },
         price: { type: Number, required: true, min: 0 }, // precio unitario
@@ -38,7 +49,7 @@ const orderSchema = new Schema(
     // Estado de entrega
     estado: {
       type: String,
-      enum: ["pendiente", "entregado", "no entregado"],
+      enum: ["pendiente", "entregado", "no entregado", "cancelado"],
       default: "pendiente",
     },
     fecha: {
@@ -49,6 +60,9 @@ const orderSchema = new Schema(
       type: String,
     },
     horaEntrega: {
+      type: String,
+    },
+    horaRecogida: {
       type: String,
     },
   },

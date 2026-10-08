@@ -1,6 +1,7 @@
 import customerModel from "../models/customerModels.js";
 import crudUtils from "../utils/users/crudUtils.js";
 import validationUtils from "../utils/auth/validationsUsersUtils.js";
+import customerUtils from "../utils/auth/customers/validationsCustomersUtils.js";
 
 const customerController = {};
 
@@ -28,7 +29,7 @@ customerController.deleteCustomer = async (req, res) => {
 
 customerController.updateCustomer = async (req, res) => {
     try {
-        const { name, lastName, carnet, phone, status } = req.body;
+        const { name, lastName, carnet, phone, age, status } = req.body;
         const updateData = {};
         const validationsToRun = [];
 
@@ -40,8 +41,18 @@ customerController.updateCustomer = async (req, res) => {
             validationsToRun.push(() => validationUtils.validateName(lastName, "Last name"));
             updateData.lastName = lastName.trim();
         }
-        if (carnet !== undefined) updateData.carnet = carnet.trim();
-        if (phone !== undefined) updateData.phone = phone.trim();
+        if (carnet !== undefined) {
+            validationsToRun.push(() => customerUtils.validateCarnet(carnet));
+            updateData.carnet = carnet.trim();
+        }
+        if (phone !== undefined) {
+            validationsToRun.push(() => customerUtils.validatePhone(phone));
+            updateData.phone = phone.trim();
+        }
+        if (age !== undefined) {
+            validationsToRun.push(() => customerUtils.validateAge(age));
+            updateData.age = Number(age);
+        }
         if (status !== undefined) updateData.status = status;
 
         if (validationsToRun.length > 0) {

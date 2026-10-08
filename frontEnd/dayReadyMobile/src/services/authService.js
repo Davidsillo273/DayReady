@@ -23,10 +23,10 @@ const authService = {
   },
 
   // Paso 3: nombre y apellido del nuevo estudiante.
-  savePersonalInfo({ name, lastName, carnet, phone }) {
+  savePersonalInfo({ name, lastName, carnet, phone, age }) {
     return apiFetch("/auth/customers/register/personalInfo", {
       method: "POST",
-      body: JSON.stringify({ name, lastName, carnet, phone }),
+      body: JSON.stringify({ name, lastName, carnet, phone, age: Number(age) }),
     });
   },
 
@@ -51,6 +51,30 @@ const authService = {
 
   logout() {
     return apiFetch("/auth/logout", { method: "POST" });
+  },
+
+  // Recuperación de contraseña (backend/src/routes/auth/recoveryPasswordRoutes.js).
+  // Igual que el registro, son 3 pasos encadenados por una cookie temporal
+  // (recoveryCookie): pedir código, verificarlo y guardar la nueva clave.
+  requestRecoveryCode(email) {
+    return apiFetch("/auth/recovery/requestCode", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    });
+  },
+
+  verifyRecoveryCode(code) {
+    return apiFetch("/auth/recovery/verifyCode", {
+      method: "POST",
+      body: JSON.stringify({ codeRequest: code }),
+    });
+  },
+
+  setNewPassword(newPassword, confirmNewPassword) {
+    return apiFetch("/auth/recovery/newPassword", {
+      method: "POST",
+      body: JSON.stringify({ newPassword, confirmNewPassword }),
+    });
   },
 };
 

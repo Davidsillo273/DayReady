@@ -7,6 +7,7 @@ import customerRoutes from "../customerRoutes.js";
 import cartRoutes from "../cartRoutes.js";
 import ordersRoutes from "../orderRoutes.js";
 import dayliMenuRoutes from "../dailyMenuRoutes.js"
+import reviewRoutes from "../reviewRoutes.js";
 
 //auths
 import invitationUserRoutes from "../auth/invitationUserRoutes.js";
@@ -35,4 +36,5 @@ router.use("/auth/logout", logoutRoutes);
 router.use("/cart", cartRoutes);
 router.use("/orders", ordersRoutes);
 router.use("/menu", dayliMenuRoutes)
+router.use("/reviews", reviewRoutes);
 export default router;

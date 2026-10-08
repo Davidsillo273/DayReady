@@ -19,6 +19,8 @@ import TermsScreen from "../screens/TermsScreen";
 import ProductDetailScreen from "../screens/ProductDetailScreen";
 import CheckoutScreen from "../screens/CheckoutScreen";
 import PaymentScreen from "../screens/PaymentScreen";
+import OrderDetailScreen from "../screens/OrderDetailScreen";
+import ForgotPasswordScreen from "../screens/ForgotPasswordScreen";
 import { colors, fonts } from "../theme/colors";
 
 const Stack = createNativeStackNavigator();
@@ -53,6 +55,16 @@ export default function RootNavigator() {
             component={PaymentScreen}
             options={{ headerShown: true, title: "Pago", ...headerOptions }}
           />
+          <Stack.Screen
+            name="OrderDetail"
+            component={OrderDetailScreen}
+            options={{ headerShown: true, title: "Detalle del pedido", ...headerOptions }}
+          />
+          <Stack.Screen
+            name="ChangePassword"
+            component={ForgotPasswordScreen}
+            options={{ headerShown: true, title: "Cambiar contraseña", ...headerOptions }}
+          />
         </Stack.Group>
       ) : (
         <Stack.Group>
@@ -66,6 +78,11 @@ export default function RootNavigator() {
             name="Terms"
             component={TermsScreen}
             options={{ headerShown: true, title: "Términos y condiciones", ...headerOptions }}
+          />
+          <Stack.Screen
+            name="ForgotPassword"
+            component={ForgotPasswordScreen}
+            options={{ headerShown: true, title: "Recuperar contraseña", ...headerOptions }}
           />
         </Stack.Group>
       )}

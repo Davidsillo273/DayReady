@@ -2,13 +2,15 @@
 // ahora trae el catálogo real de /products y el menú del día real de
 // /menu, y agregar al carrito llama a CartContext (que si hiciera falta,
 // lo persiste en el backend al llegar a Checkout).
-import React, { useCallback, useEffect, useState } from "react";
-import { View, Text, TextInput, ScrollView, TouchableOpacity, StyleSheet, RefreshControl } from "react-native";
+import React, { useCallback, useState } from "react";
+import { View, Text, TextInput, ScrollView, TouchableOpacity, StyleSheet, RefreshControl, Alert } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import ProductCard from "../components/ProductCard";
 import CartModal from "../components/CartModal";
 import productsService from "../services/productsService";
 import menuService from "../services/menuService";
+import reviewsService from "../services/reviewsService";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import { colors, fonts } from "../theme/colors";
@@ -19,6 +21,7 @@ export default function HomeScreen({ navigation }) {
 
   const [products, setProducts] = useState([]);
   const [dailyMenu, setDailyMenu] = useState([]);
+  const [ratings, setRatings] = useState({}); // { [productId]: { average, count } }
   const [search, setSearch] = useState("");
   const [showCart, setShowCart] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -27,9 +30,14 @@ export default function HomeScreen({ navigation }) {
   const loadCatalog = useCallback(async () => {
     setLoadError("");
     try {
-      const [productList, menuList] = await Promise.all([productsService.getAll(), menuService.getAll()]);
+      const [productList, menuList, summary] = await Promise.all([
+        productsService.getAll(),
+        menuService.getAll(),
+        reviewsService.getSummary().catch(() => []),
+      ]);
       setProducts(productList);
       setDailyMenu(menuList);
+      setRatings(Object.fromEntries(summary.map((s) => [s.productId, s])));
     } catch (error) {
       setLoadError(error.message);
     } finally {
@@ -37,9 +45,14 @@ export default function HomeScreen({ navigation }) {
     }
   }, []);
 
-  useEffect(() => {
-    loadCatalog();
-  }, [loadCatalog]);
+  // Se recarga cada vez que se vuelve a Home: así el stock y las
+  // valoraciones siempre están al día (por ejemplo después de comprar o de
+  // cancelar un pedido).
+  useFocusEffect(
+    useCallback(() => {
+      loadCatalog();
+    }, [loadCatalog])
+  );
 
   const term = search.trim().toLowerCase();
   const filteredProducts = products.filter(
@@ -61,10 +74,14 @@ export default function HomeScreen({ navigation }) {
       quantity: m.stock,
     }));
 
-  const firstName = customer?.name?.split(" ")[0] || "Estudiante";
+  // Nombre real del cliente (no el correo), tal como se registró.
+  const fullName = [customer?.name, customer?.lastName].filter(Boolean).join(" ") || "Estudiante";
   const initials = `${customer?.name?.[0] || ""}${customer?.lastName?.[0] || ""}`.toUpperCase();
 
-  const handleAdd = (product) => cart.addItem(product);
+  const handleAdd = (product) => {
+    const error = cart.addItem(product);
+    if (error) Alert.alert("Sin stock suficiente", error);
+  };
 
   return (
     <View style={styles.screen}>
@@ -75,7 +92,7 @@ export default function HomeScreen({ navigation }) {
               <Text style={styles.avatarText}>{initials || "DR"}</Text>
             </View>
             <View>
-              <Text style={styles.greeting}>Hola, {firstName}</Text>
+              <Text style={styles.greeting} numberOfLines={1}>Hola, {fullName}</Text>
               <Text style={styles.question}>¿Listo para ordenar?</Text>
             </View>
           </View>
@@ -83,7 +100,7 @@ export default function HomeScreen({ navigation }) {
             <Feather name="shopping-cart" size={24} color={colors.textDark} />
             {cart.items.length > 0 && (
               <View style={styles.cartBadge}>
-                <Text style={styles.cartBadgeText}>{cart.items.reduce((n, i) => n + i.cantidad, 0)}</Text>
+                <Text style={styles.cartBadgeText}>{cart.itemCount}</Text>
               </View>
             )}
           </TouchableOpacity>
@@ -125,6 +142,7 @@ export default function HomeScreen({ navigation }) {
                 <ProductCard
                   key={p._id}
                   product={p}
+                  rating={ratings[p._id]}
                   onAdd={handleAdd}
                   onPress={() => navigation.navigate("ProductDetail", { product: p })}
                 />
@@ -139,6 +157,7 @@ export default function HomeScreen({ navigation }) {
             <ProductCard
               key={p._id}
               product={p}
+              rating={ratings[p._id]}
               onAdd={handleAdd}
               onPress={() => navigation.navigate("ProductDetail", { product: p })}
             />
@@ -173,7 +192,7 @@ const styles = StyleSheet.create({
   headerLeft: { flexDirection: "row", alignItems: "center", gap: 12 },
   avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.primary, alignItems: "center", justifyContent: "center" },
   avatarText: { color: colors.white, fontFamily: fonts.headingExtra, fontSize: 15 },
-  greeting: { fontSize: 11, color: "#888" },
+  greeting: { fontSize: 13, fontFamily: fonts.heading, color: colors.primaryDark, maxWidth: 220 },
   question: { fontSize: 14, fontFamily: fonts.heading, color: colors.textDark },
   cartButton: { padding: 8 },
   cartBadge: { position: "absolute", top: 2, right: 2, backgroundColor: colors.primary, borderRadius: 9, width: 18, height: 18, alignItems: "center", justifyContent: "center" },

@@ -18,7 +18,9 @@ import {
   validateName,
   validateCarnet,
   validatePhone,
+  validateAge,
   validatePassword,
+  validateConfirmPassword,
 } from "../utils/validators";
 import { colors, fonts } from "../theme/colors";
 
@@ -41,6 +43,7 @@ export default function RegisterScreen({ navigation }) {
   const [lastName, setLastName] = useState("");
   const [carnet, setCarnet] = useState("");
   const [phone, setPhone] = useState("");
+  const [age, setAge] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
@@ -71,17 +74,18 @@ export default function RegisterScreen({ navigation }) {
         lastName: validateName(lastName, "El apellido"),
         carnet: validateCarnet(carnet),
         phone: validatePhone(phone),
+        age: validateAge(age),
       };
       if (Object.values(fieldErrors).some(Boolean)) return setErrors(fieldErrors);
       return runStep({}, async () => {
-        await authService.savePersonalInfo({ name, lastName, carnet, phone });
+        await authService.savePersonalInfo({ name: name.trim(), lastName: lastName.trim(), carnet: carnet.trim(), phone: phone.trim(), age });
         setStep(4);
       });
     }
 
     // step 4
     const passwordError = validatePassword(password);
-    const matchError = password !== confirmPassword ? "Las contraseñas no coinciden." : null;
+    const matchError = validateConfirmPassword(password, confirmPassword);
     if (passwordError || matchError) {
       return setErrors({ password: passwordError, confirmPassword: matchError });
     }
@@ -150,6 +154,14 @@ export default function RegisterScreen({ navigation }) {
               value={phone}
               onChangeText={setPhone}
               error={errors.phone}
+            />
+            <InputField
+              label="Edad"
+              placeholder="Ej. 17"
+              keyboardType="number-pad"
+              value={age}
+              onChangeText={(v) => setAge(v.replace(/\D/g, "").slice(0, 2))}
+              error={errors.age}
             />
           </>
         )}

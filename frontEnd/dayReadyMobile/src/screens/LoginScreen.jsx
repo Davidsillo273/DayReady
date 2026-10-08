@@ -39,6 +39,7 @@ export default function LoginScreen({ navigation }) {
       await login(email.trim().toLowerCase(), password);
     } catch (error) {
       setGeneralError(error.message);
+      setPassword(""); // no se deja la contraseña equivocada escrita
     } finally {
       setLoading(false);
     }
@@ -71,7 +72,7 @@ export default function LoginScreen({ navigation }) {
             error={errors.password}
           />
 
-          <TouchableOpacity onPress={() => setGeneralError("La recuperación de contraseña llegará próximamente.")}>
+          <TouchableOpacity onPress={() => navigation.navigate("ForgotPassword")}>
             <Text style={styles.forgot}>¿Olvidaste tu contraseña?</Text>
           </TouchableOpacity>
 

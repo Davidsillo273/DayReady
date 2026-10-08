@@ -25,21 +25,31 @@ function resolveHost() {
   return LAN_IP;
 }
 
-export const API_BASE_URL = `http://${resolveHost()}:4000/api`;
+// Para el APK (celular físico) la URL se define al compilar con la variable
+// EXPO_PUBLIC_API_URL (ver eas.json y el README), por ejemplo
+// "http://192.168.1.10:4000/api" o la URL del backend desplegado. Si no se
+// define, se usa la detección automática de arriba (útil en desarrollo).
+export const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || `http://${resolveHost()}:4000/api`;
 
 // Envoltorio sobre fetch que ya deja listo lo que se repite en cada
 // llamada: la URL base, el header de JSON y el envío de cookies de sesión
 // (credentials: "include", indispensable porque el login guarda un JWT en
 // una cookie httpOnly y no en el cuerpo de la respuesta).
 export async function apiFetch(path, options = {}) {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
-    ...options,
-  });
+  let response;
+  try {
+    response = await fetch(`${API_BASE_URL}${path}`, {
+      credentials: "include",
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...options.headers,
+      },
+    });
+  } catch {
+    // fetch sólo falla así cuando no hay conexión o el backend está apagado.
+    throw new Error("No se pudo conectar con el servidor. Revisa tu conexión a internet.");
+  }
 
   // El backend siempre responde en JSON (incluso en los errores), así que
   // lo parseamos una sola vez aquí en lugar de repetirlo en cada servicio.
@@ -48,7 +58,10 @@ export async function apiFetch(path, options = {}) {
   if (!response.ok) {
     // Los controladores del backend mandan { message: "..." } al fallar.
     const message = data?.message || "Ocurrió un error al conectar con el servidor.";
-    throw new Error(message);
+    const error = new Error(message);
+    error.status = response.status;
+    error.data = data;
+    throw error;
   }
 
   return data;

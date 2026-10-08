@@ -30,6 +30,11 @@ const customerSchema = new Schema(
       required: true,
       trim: true,
     },
+    age: {
+      type: Number,
+      min: 12,
+      max: 99,
+    },
     password: {
       type: String,
       required: true,
