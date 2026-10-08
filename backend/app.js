@@ -14,6 +14,9 @@ app.use(cors({
         // porque CORS sÃ³lo lo aplican los navegadores, pero al probar la
         // versiÃ³n web de Expo sÃ­ se necesita.
         "http://localhost:8081", "http://localhost:8082", "http://localhost:19006",
+        // Orígenes extra en producción (ej. los fronts desplegados),
+        // separados por coma en la variable CORS_ORIGINS.
+        ...(process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(",").map((o) => o.trim()) : []),
     ],
     credentials: true,
 }));

@@ -10,7 +10,7 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "http://192.168.1.10:4000/api"
+        "EXPO_PUBLIC_API_URL": "http://192.168.1.19:4000/api"
       }
     },
     "production": {
@@ -18,7 +18,7 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "http://192.168.1.10:4000/api"
+        "EXPO_PUBLIC_API_URL": "http://192.168.1.19:4000/api"
       }
     }
   },

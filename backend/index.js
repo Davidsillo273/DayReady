@@ -3,8 +3,10 @@ import "./database.js"
 
 async function main() {
     try {
-        app.listen(4000);
-        console.log("Server on port 4000");
+        // Render (y otros hostings) asignan el puerto por la variable PORT.
+        const port = process.env.PORT || 4000;
+        app.listen(port);
+        console.log(`Server on port ${port}`);
     } catch (error) {
         console.error("Error listening to server:", error);
     }
