@@ -26,7 +26,7 @@ export default function LoadingScreen() {
   return (
     <View style={styles.container}>
       <Animated.View style={{ transform: [{ scale: pulse }] }}>
-        <Logo color={colors.white} size={1.3} />
+        <Logo size={1.1} />
       </Animated.View>
       <Text style={styles.subtitle}>Preparando tu comedor digital...</Text>
     </View>

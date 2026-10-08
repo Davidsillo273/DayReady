@@ -31,6 +31,9 @@ const orderSchema = new Schema(
         // Referencia al producto: con ella se descuenta el stock al crear
         // la orden y se devuelve si la orden se cancela.
         productId: { type: mongoose.Types.ObjectId, ref: "products" },
+        // Si se compró desde el menú del día, el stock que se descuenta (y
+        // se devuelve al cancelar) es el de ese menú, no el del producto.
+        menuId: { type: mongoose.Types.ObjectId, ref: "dailyMenu" },
         name: { type: String, required: true },
         quantity: { type: Number, required: true, min: 1 },
         price: { type: Number, required: true, min: 0 }, // precio unitario

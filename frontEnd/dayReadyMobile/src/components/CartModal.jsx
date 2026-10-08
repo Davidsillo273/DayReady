@@ -3,27 +3,30 @@
 // para lograr el mismo efecto de "hoja que sube desde abajo" que tenía el
 // mockup web con CSS puro.
 import React from "react";
-import { Modal, View, Text, Image, TouchableOpacity, ScrollView, StyleSheet } from "react-native";
+import { Modal, View, Text, Image, TouchableOpacity, ScrollView, StyleSheet, useWindowDimensions } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import QuantityControl from "./QuantityControl";
 import PrimaryButton from "./PrimaryButton";
 import EmptyState from "./EmptyState";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors, fonts, radius } from "../theme/colors";
 
 export default function CartModal({ visible, items, total, onClose, onUpdateQuantity, onRemove, onCheckout }) {
+  const insets = useSafeAreaInsets();
+  const { height } = useWindowDimensions();
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose} statusBarTranslucent navigationBarTranslucent>
       <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={onClose}>
-        <TouchableOpacity style={styles.sheet} activeOpacity={1} onPress={() => {}}>
+        <TouchableOpacity style={[styles.sheet, { paddingBottom: 24 + insets.bottom }]} activeOpacity={1} onPress={() => {}}>
           <View style={styles.handle} />
           <Text style={styles.title}>Carrito de compras</Text>
 
-          <ScrollView style={{ maxHeight: 380 }}>
+          <ScrollView style={{ maxHeight: height * 0.5 }}>
             {items.length === 0 ? (
               <EmptyState icon="shopping-cart" title="Tu carrito está vacío" message="Agrega productos del catálogo para hacer un pedido." />
             ) : (
               items.map((item) => (
-                <View key={item.productId} style={styles.item}>
+                <View key={item.key} style={styles.item}>
                   <View style={{ flexDirection: "row", gap: 12 }}>
                     <Image source={{ uri: item.image }} style={styles.itemImage} />
                     <View style={{ flex: 1 }}>
@@ -37,14 +40,14 @@ export default function CartModal({ visible, items, total, onClose, onUpdateQuan
                       <QuantityControl
                         value={item.cantidad}
                         max={item.stock}
-                        onChange={(qty) => onUpdateQuantity(item.productId, qty)}
+                        onChange={(qty) => onUpdateQuantity(item.key, qty)}
                       />
                       {item.cantidad >= item.stock ? (
                         <Text style={styles.stockHint}>Máximo disponible: {item.stock}</Text>
                       ) : null}
                     </View>
                   </View>
-                  <TouchableOpacity style={styles.removeButton} onPress={() => onRemove(item.productId)}>
+                  <TouchableOpacity style={styles.removeButton} onPress={() => onRemove(item.key)}>
                     <Feather name="trash-2" size={14} color={colors.textLight} />
                     <Text style={styles.removeText}>Eliminar</Text>
                   </TouchableOpacity>

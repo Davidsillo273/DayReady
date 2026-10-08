@@ -9,10 +9,12 @@ import EmptyState from "../components/EmptyState";
 import PrimaryButton from "../components/PrimaryButton";
 import ordersService from "../services/ordersService";
 import { useAuth } from "../context/AuthContext";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors, fonts } from "../theme/colors";
 
 export default function OrderHistoryScreen({ navigation }) {
   const { customer } = useAuth();
+  const insets = useSafeAreaInsets();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -39,7 +41,7 @@ export default function OrderHistoryScreen({ navigation }) {
 
   return (
     <View style={styles.screen}>
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 20 }]}>
         <Text style={styles.title}>Historial de pedidos</Text>
         <Text style={styles.subtitle}>Toca un pedido para ver su detalle.</Text>
       </View>

@@ -4,10 +4,15 @@
 import React from "react";
 import { View, StyleSheet } from "react-native";
 import Svg, { Path } from "react-native-svg";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-export default function WaveHeader({ color = "#F4A261", lightColor = "#FDEBD0", height = 220, children }) {
+// "safeTop": la pantalla no tiene header de navegación (ej. Login), así que
+// el encabezado se estira bajo la barra de estado y baja su contenido.
+export default function WaveHeader({ color = "#F4A261", lightColor = "#FDEBD0", height = 220, safeTop = false, children }) {
+  const insets = useSafeAreaInsets();
+  const topInset = safeTop ? insets.top : 0;
   return (
-    <View style={[styles.container, { height, backgroundColor: color }]}>
+    <View style={[styles.container, { height: height + topInset, backgroundColor: color }]}>
       {/* Mancha clara decorativa, apenas visible detrás del contenido */}
       <Svg
         style={StyleSheet.absoluteFill}
@@ -28,7 +33,7 @@ export default function WaveHeader({ color = "#F4A261", lightColor = "#FDEBD0", 
       >
         <Path d="M0 60 Q105 0 210 40 Q315 80 420 20 L420 60 Z" fill="#FFFFFF" />
       </Svg>
-      <View style={styles.content}>{children}</View>
+      <View style={[styles.content, { paddingTop: 40 + topInset }]}>{children}</View>
     </View>
   );
 }

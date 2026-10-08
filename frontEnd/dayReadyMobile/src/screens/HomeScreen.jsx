@@ -13,11 +13,16 @@ import menuService from "../services/menuService";
 import reviewsService from "../services/reviewsService";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors, fonts } from "../theme/colors";
+
+// El backend guarda el día del menú en inglés (dailyMenuModel.dayOfWeek).
+const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 export default function HomeScreen({ navigation }) {
   const { customer } = useAuth();
   const cart = useCart();
+  const insets = useSafeAreaInsets();
 
   const [products, setProducts] = useState([]);
   const [dailyMenu, setDailyMenu] = useState([]);
@@ -32,7 +37,7 @@ export default function HomeScreen({ navigation }) {
     try {
       const [productList, menuList, summary] = await Promise.all([
         productsService.getAll(),
-        menuService.getAll(),
+        menuService.getByDay(DAYS[new Date().getDay()]).catch(() => []),
         reviewsService.getSummary().catch(() => []),
       ]);
       setProducts(productList);
@@ -68,6 +73,7 @@ export default function HomeScreen({ navigation }) {
     .filter((m) => m.productId && m.productId.name?.toLowerCase().includes(term))
     .map((m) => ({
       ...m.productId,
+      menuId: m._id, // así el carrito y la orden usan el stock del menú
       price: m.price,
       name: m.name || m.productId.name,
       description: m.description,
@@ -85,13 +91,13 @@ export default function HomeScreen({ navigation }) {
 
   return (
     <View style={styles.screen}>
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
         <View style={styles.headerTop}>
           <View style={styles.headerLeft}>
             <View style={styles.avatar}>
               <Text style={styles.avatarText}>{initials || "DR"}</Text>
             </View>
-            <View>
+            <View style={{ flex: 1 }}>
               <Text style={styles.greeting} numberOfLines={1}>Hola, {fullName}</Text>
               <Text style={styles.question}>¿Listo para ordenar?</Text>
             </View>
@@ -140,7 +146,7 @@ export default function HomeScreen({ navigation }) {
             <View style={styles.grid}>
               {featured.map((p) => (
                 <ProductCard
-                  key={p._id}
+                  key={p.menuId}
                   product={p}
                   rating={ratings[p._id]}
                   onAdd={handleAdd}
@@ -189,10 +195,10 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.white },
   header: { backgroundColor: colors.white, paddingTop: 20, paddingHorizontal: 20, paddingBottom: 16, elevation: 2 },
   headerTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 },
-  headerLeft: { flexDirection: "row", alignItems: "center", gap: 12 },
+  headerLeft: { flex: 1, flexDirection: "row", alignItems: "center", gap: 12 },
   avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.primary, alignItems: "center", justifyContent: "center" },
   avatarText: { color: colors.white, fontFamily: fonts.headingExtra, fontSize: 15 },
-  greeting: { fontSize: 13, fontFamily: fonts.heading, color: colors.primaryDark, maxWidth: 220 },
+  greeting: { fontSize: 13, fontFamily: fonts.heading, color: colors.primaryDark },
   question: { fontSize: 14, fontFamily: fonts.heading, color: colors.textDark },
   cartButton: { padding: 8 },
   cartBadge: { position: "absolute", top: 2, right: 2, backgroundColor: colors.primary, borderRadius: 9, width: 18, height: 18, alignItems: "center", justifyContent: "center" },
@@ -206,6 +212,8 @@ const styles = StyleSheet.create({
   bannerSubtitle: { fontSize: 12, color: "#777", marginTop: 2 },
   sectionTitle: { fontFamily: fonts.heading, fontSize: 15, color: colors.textDark, marginBottom: 2 },
   sectionSubtitle: { fontSize: 12, color: "#999", marginBottom: 12 },
-  grid: { flexDirection: "row", flexWrap: "wrap", gap: 12, marginBottom: 12 },
+  // 2 columnas con space-between: con "gap" fijo, en pantallas angostas
+  // 48% + 48% + 12px no cabía y quedaba una sola tarjeta por fila.
+  grid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", rowGap: 12, marginBottom: 12 },
   emptyText: { textAlign: "center", color: colors.textLight, marginTop: 20 },
 });

@@ -10,10 +10,12 @@ import PrimaryButton from "../components/PrimaryButton";
 import customersService from "../services/customersService";
 import { useAuth } from "../context/AuthContext";
 import { validateName, validatePhone, validateAge } from "../utils/validators";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors, fonts } from "../theme/colors";
 
 export default function ProfileScreen({ navigation }) {
   const { customer, logout, refreshProfile } = useAuth();
+  const insets = useSafeAreaInsets();
   const [name, setName] = useState(customer?.name || "");
   const [lastName, setLastName] = useState(customer?.lastName || "");
   const [phone, setPhone] = useState(customer?.phone || "");
@@ -68,7 +70,7 @@ export default function ProfileScreen({ navigation }) {
 
   return (
     <ScrollView style={styles.screen}>
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 24 }]}>
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>{initials || "DR"}</Text>
         </View>

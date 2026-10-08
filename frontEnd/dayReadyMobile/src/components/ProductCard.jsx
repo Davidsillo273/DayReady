@@ -76,8 +76,9 @@ const styles = StyleSheet.create({
   soldOutText: { color: colors.white, fontFamily: fonts.headingExtra, fontSize: 14 },
   addButtonDisabled: { backgroundColor: colors.textLight },
   locationText: { fontSize: 11, color: colors.textLight },
-  footer: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  // Si la tarjeta es muy angosta, precio y botón se acomodan en dos filas.
+  footer: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", rowGap: 6 },
   price: { fontFamily: fonts.heading, fontSize: 15, color: colors.textDark },
-  addButton: { backgroundColor: colors.primary, borderRadius: 20, paddingVertical: 6, paddingHorizontal: 14 },
+  addButton: { backgroundColor: colors.primary, borderRadius: 20, paddingVertical: 6, paddingHorizontal: 12 },
   addButtonText: { color: colors.white, fontSize: 12, fontFamily: fonts.heading },
 });

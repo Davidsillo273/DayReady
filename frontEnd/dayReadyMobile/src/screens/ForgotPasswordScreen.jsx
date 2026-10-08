@@ -14,6 +14,7 @@ import {
   validatePassword,
   validateConfirmPassword,
 } from "../utils/validators";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors, fonts } from "../theme/colors";
 
 const STEP_TITLES = {
@@ -38,6 +39,7 @@ export default function ForgotPasswordScreen({ route, navigation }) {
   const [errors, setErrors] = useState({});
   const [generalError, setGeneralError] = useState("");
   const [loading, setLoading] = useState(false);
+  const insets = useSafeAreaInsets();
 
   const runStep = async (action) => {
     setErrors({});
@@ -96,7 +98,7 @@ export default function ForgotPasswordScreen({ route, navigation }) {
     });
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.form} keyboardShouldPersistTaps="handled">
+    <ScrollView style={styles.screen} contentContainerStyle={[styles.form, { paddingBottom: 28 + insets.bottom }]} keyboardShouldPersistTaps="handled">
       <Text style={styles.stepLabel}>Paso {step} de 3</Text>
       <Text style={styles.title}>{STEP_TITLES[step]}</Text>
       <Text style={styles.hint}>{STEP_HINTS[step]}</Text>

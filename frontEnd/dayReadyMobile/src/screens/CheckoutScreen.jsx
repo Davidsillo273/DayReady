@@ -9,6 +9,7 @@ import EmptyState from "../components/EmptyState";
 import { validatePhone } from "../utils/validators";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors, fonts, radius } from "../theme/colors";
 
 const PICKUP_SLOTS = ["9:30 am", "10:00 am", "10:30 am", "12:00 pm", "12:30 pm"];
@@ -16,6 +17,7 @@ const PICKUP_SLOTS = ["9:30 am", "10:00 am", "10:30 am", "12:00 pm", "12:30 pm"]
 export default function CheckoutScreen({ navigation }) {
   const { customer } = useAuth();
   const cart = useCart();
+  const insets = useSafeAreaInsets();
 
   const [phone, setPhone] = useState(customer?.phone || "");
   const [pickupTime, setPickupTime] = useState(PICKUP_SLOTS[1]);
@@ -43,7 +45,7 @@ export default function CheckoutScreen({ navigation }) {
   };
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={{ padding: 20 }}>
+    <ScrollView style={styles.screen} contentContainerStyle={{ padding: 20, paddingBottom: 20 + insets.bottom }}>
       <View style={styles.card}>
         <InputField label="Nombre" value={`${customer?.name || ""} ${customer?.lastName || ""}`} editable={false} />
         <InputField label="Correo electrónico" value={customer?.email || ""} editable={false} />
@@ -71,9 +73,9 @@ export default function CheckoutScreen({ navigation }) {
           </View>
         ) : (
           cart.items.map((item) => (
-            <View key={item.productId} style={styles.item}>
+            <View key={item.key} style={styles.item}>
               <Image source={{ uri: item.image }} style={styles.itemImage} />
-              <View>
+              <View style={{ flex: 1 }}>
                 <Text style={styles.itemText}><Text style={styles.bold}>Producto:</Text> {item.name}</Text>
                 <Text style={styles.itemText}><Text style={styles.bold}>Cantidad:</Text> {item.cantidad}</Text>
                 <Text style={styles.itemText}>

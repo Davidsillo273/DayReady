@@ -12,6 +12,7 @@ import ordersService from "../services/ordersService";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import { validateCardNumber, validateExpiry, validateCvc, validateName } from "../utils/validators";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors, fonts } from "../theme/colors";
 
 function formatCardNumber(value) {
@@ -27,6 +28,7 @@ export default function PaymentScreen({ route, navigation }) {
   const { pickupTime } = route.params;
   const { customer } = useAuth();
   const cart = useCart();
+  const insets = useSafeAreaInsets();
 
   const [cardNumber, setCardNumber] = useState("");
   const [expiry, setExpiry] = useState("");
@@ -56,7 +58,7 @@ export default function PaymentScreen({ route, navigation }) {
         customerId: customer._id,
         customerName: `${customer.name} ${customer.lastName}`,
         customerContact: customer.email,
-        items: cart.items.map((i) => ({ productId: i.productId, name: i.name, quantity: i.cantidad, price: i.price })),
+        items: cart.items.map((i) => ({ productId: i.productId, menuId: i.menuId, name: i.name, quantity: i.cantidad, price: i.price })),
         total: cart.total,
         horaRecogida: pickupTime,
       });
@@ -71,8 +73,8 @@ export default function PaymentScreen({ route, navigation }) {
     } catch (error) {
       // 409 = otro cliente compró antes y ya no alcanza el stock: se ajusta
       // el carrito a lo que realmente queda.
-      if (error.status === 409 && error.data?.productId) {
-        cart.syncStock(error.data.productId, error.data.available);
+      if (error.status === 409 && (error.data?.menuId || error.data?.productId)) {
+        cart.syncStock(error.data.menuId || error.data.productId, error.data.available);
         Alert.alert("Stock insuficiente", `${error.message} Ajustamos tu carrito, revísalo antes de pagar.`);
       } else {
         Alert.alert("No se pudo procesar el pago", error.message);
@@ -100,7 +102,7 @@ export default function PaymentScreen({ route, navigation }) {
   }
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={{ padding: 20 }}>
+    <ScrollView style={styles.screen} contentContainerStyle={{ padding: 20, paddingBottom: 20 + insets.bottom }}>
       <View style={styles.card}>
         <InputField
           label="Número de tarjeta"

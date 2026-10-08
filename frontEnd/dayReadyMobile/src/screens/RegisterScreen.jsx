@@ -22,6 +22,7 @@ import {
   validatePassword,
   validateConfirmPassword,
 } from "../utils/validators";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors, fonts } from "../theme/colors";
 
 const STEP_TITLES = {
@@ -36,6 +37,7 @@ export default function RegisterScreen({ navigation }) {
   const [loading, setLoading] = useState(false);
   const [generalError, setGeneralError] = useState("");
   const [errors, setErrors] = useState({});
+  const insets = useSafeAreaInsets();
 
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
@@ -113,10 +115,10 @@ export default function RegisterScreen({ navigation }) {
   return (
     <View style={styles.screen}>
       <WaveHeader color={colors.green} lightColor={colors.greenLight} height={200}>
-        <Logo color={colors.primaryDark} size={0.85} />
+        <Logo size={0.85} />
       </WaveHeader>
 
-      <ScrollView contentContainerStyle={styles.form}>
+      <ScrollView contentContainerStyle={[styles.form, { paddingBottom: 28 + insets.bottom }]} keyboardShouldPersistTaps="handled">
         <Text style={styles.stepLabel}>Paso {step} de 4</Text>
         <Text style={styles.title}>{STEP_TITLES[step]}</Text>
 

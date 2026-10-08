@@ -7,7 +7,7 @@
 // el formulario para opinar, que sólo aparece si el cliente ya compró el
 // producto (el backend lo vuelve a validar al guardar).
 import React, { useCallback, useEffect, useState } from "react";
-import { View, Text, Image, ScrollView, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from "react-native";
+import { View, Text, Image, useWindowDimensions, ScrollView, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import QuantityControl from "../components/QuantityControl";
 import PrimaryButton from "../components/PrimaryButton";
@@ -17,7 +17,8 @@ import ReviewForm from "../components/ReviewForm";
 import productsService from "../services/productsService";
 import reviewsService from "../services/reviewsService";
 import { useAuth } from "../context/AuthContext";
-import { useCart } from "../context/CartContext";
+import { useCart, cartKey } from "../context/CartContext";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors, fonts } from "../theme/colors";
 
 const PLACEHOLDER = "https://placehold.co/600x400/F4A261/FFFFFF/png?text=DayReady";
@@ -26,6 +27,8 @@ export default function ProductDetailScreen({ route, navigation }) {
   const productId = route.params.product?._id || route.params.productId;
   const { customer } = useAuth();
   const cart = useCart();
+  const insets = useSafeAreaInsets();
+  const { height: windowHeight } = useWindowDimensions();
 
   const [product, setProduct] = useState(route.params.product || null);
   const [quantity, setQuantity] = useState(1);
@@ -71,7 +74,7 @@ export default function ProductDetailScreen({ route, navigation }) {
   }
 
   const stock = Number(product.quantity ?? 0);
-  const inCart = cart.items.find((i) => i.productId === productId)?.cantidad || 0;
+  const inCart = cart.items.find((i) => i.key === cartKey(product))?.cantidad || 0;
   const available = Math.max(stock - inCart, 0);
   const outOfStock = available <= 0;
 
@@ -113,9 +116,9 @@ export default function ProductDetailScreen({ route, navigation }) {
 
   return (
     <View style={styles.screen}>
-      <View style={styles.hero}>
+      <View style={{ height: Math.min(280, windowHeight * 0.35) }}>
         <Image source={{ uri: product.image || PLACEHOLDER }} style={styles.heroImage} />
-        <TouchableOpacity style={[styles.roundButton, styles.backButton]} onPress={() => navigation.goBack()}>
+        <TouchableOpacity style={[styles.roundButton, styles.backButton, { top: insets.top + 8 }]} onPress={() => navigation.goBack()}>
           <Feather name="arrow-left" size={20} color={colors.textDark} />
         </TouchableOpacity>
       </View>
@@ -183,7 +186,7 @@ export default function ProductDetailScreen({ route, navigation }) {
         {reviews.count === 0 && <Text style={styles.noReviews}>Nadie ha opinado todavía.</Text>}
       </ScrollView>
 
-      <View style={styles.bottomBar}>
+      <View style={[styles.bottomBar, { paddingBottom: 16 + insets.bottom }]}>
         <View>
           <Text style={styles.bottomBarQty}>{quantity} producto{quantity > 1 ? "s" : ""}</Text>
           <Text style={styles.bottomBarTotal}>${(product.price * quantity).toFixed(2)}</Text>
@@ -205,7 +208,6 @@ export default function ProductDetailScreen({ route, navigation }) {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.white },
   loading: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.white },
-  hero: { height: 280 },
   heroImage: { width: "100%", height: "100%" },
   roundButton: {
     position: "absolute",
@@ -217,7 +219,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     elevation: 3,
   },
-  backButton: { top: 48, left: 16 },
+  backButton: { left: 16 },
   details: { padding: 20, paddingBottom: 40 },
   categoryBadge: { alignSelf: "flex-start", backgroundColor: colors.primary, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 4, marginBottom: 10 },
   categoryText: { color: colors.white, fontSize: 11, fontFamily: fonts.heading },
@@ -236,8 +238,9 @@ const styles = StyleSheet.create({
   deleteReview: { flexDirection: "row", alignItems: "center", gap: 6, alignSelf: "flex-end", marginTop: -8, marginBottom: 14 },
   deleteReviewText: { color: colors.red, fontSize: 12, fontFamily: fonts.heading },
   noReviews: { color: colors.textLight, fontSize: 12, textAlign: "center", marginTop: 4 },
-  bottomBar: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: 20, backgroundColor: colors.white, elevation: 6 },
+  // En pantallas angostas el total y los controles pasan a dos filas.
+  bottomBar: { flexDirection: "row", flexWrap: "wrap", rowGap: 12, justifyContent: "space-between", alignItems: "center", paddingTop: 16, paddingHorizontal: 20, backgroundColor: colors.white, elevation: 6 },
   bottomBarQty: { fontSize: 12, color: "#999" },
   bottomBarTotal: { fontFamily: fonts.heading, fontSize: 16, color: colors.textDark },
-  bottomBarActions: { flexDirection: "row", alignItems: "center", gap: 16 },
+  bottomBarActions: { flexDirection: "row", alignItems: "center", gap: 12, marginLeft: "auto" },
 });
